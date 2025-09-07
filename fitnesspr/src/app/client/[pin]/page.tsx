@@ -56,12 +56,13 @@ const mockClientData = {
 }
 
 interface ClientDashboardProps {
-  params: {
+  params: Promise<{
     pin: string
-  }
+  }>
 }
 
-export default function ClientDashboard({ params }: ClientDashboardProps) {
+export default async function ClientDashboard({ params }: ClientDashboardProps) {
+  const { pin } = await params
   const { client, currentTrainingPlan, currentMealPlan, recentProgress, upcomingSessions } = mockClientData
   
   const completedExercises = currentTrainingPlan.exercises.filter(ex => ex.completed).length
