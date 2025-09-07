@@ -2,7 +2,16 @@
 Client model.
 """
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, Float
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -15,24 +24,24 @@ class Client(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True)
     trainer_id = Column(Integer, ForeignKey("trainers.id"))
-    
+
     # Personal information
     age = Column(Integer)
     gender = Column(String(10))
     height = Column(Float)  # in cm
     weight = Column(Float)  # in kg
-    
+
     # Fitness information
     fitness_level = Column(String(20))  # beginner, intermediate, advanced
     goals = Column(Text)  # fitness goals
     medical_conditions = Column(Text)  # any medical conditions
     preferences = Column(Text)  # workout preferences
-    
+
     # Contact information
     phone = Column(String(20))
     emergency_contact = Column(String(100))
     emergency_phone = Column(String(20))
-    
+
     # Status
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

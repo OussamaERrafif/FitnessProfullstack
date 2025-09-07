@@ -11,11 +11,24 @@ from app.api.v1.endpoints.auth import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.progress import (
-    ProgressCreate, ProgressResponse, ProgressUpdate, ProgressListResponse,
-    WorkoutLogCreate, WorkoutLogResponse, WorkoutLogUpdate, WorkoutLogListResponse,
-    GoalCreate, GoalResponse, GoalUpdate, GoalListResponse
+    GoalCreate,
+    GoalListResponse,
+    GoalResponse,
+    GoalUpdate,
+    ProgressCreate,
+    ProgressListResponse,
+    ProgressResponse,
+    ProgressUpdate,
+    WorkoutLogCreate,
+    WorkoutLogListResponse,
+    WorkoutLogResponse,
+    WorkoutLogUpdate,
 )
-from app.services.progress_service import ProgressService, WorkoutLogService, GoalService
+from app.services.progress_service import (
+    GoalService,
+    ProgressService,
+    WorkoutLogService,
+)
 
 router = APIRouter()
 
@@ -33,7 +46,7 @@ def read_progress(
     Retrieve progress entries.
     """
     progress_service = ProgressService(db)
-    
+
     if current_user.is_trainer:
         trainer_id = current_user.trainer.id if current_user.trainer else None
         if not trainer_id:
@@ -44,17 +57,19 @@ def read_progress(
         total = progress_service.count(trainer_id=trainer_id, client_id=client_id)
     else:
         # Client can only see their own progress
-        client = current_user.client if hasattr(current_user, 'client') else None
+        client = current_user.client if hasattr(current_user, "client") else None
         if not client:
             raise HTTPException(status_code=404, detail="Client profile not found")
-        progress_entries = progress_service.get_client_progress(client.id, skip=skip, limit=limit)
+        progress_entries = progress_service.get_client_progress(
+            client.id, skip=skip, limit=limit
+        )
         total = progress_service.count(client_id=client.id)
-    
+
     return ProgressListResponse(
         progress_entries=progress_entries,
         total=total,
         page=skip // limit + 1,
-        size=limit
+        size=limit,
     )
 
 
@@ -69,12 +84,14 @@ def create_progress(
     Create new progress entry.
     """
     if not current_user.is_trainer:
-        raise HTTPException(status_code=403, detail="Only trainers can create progress entries")
-    
+        raise HTTPException(
+            status_code=403, detail="Only trainers can create progress entries"
+        )
+
     trainer_id = current_user.trainer.id if current_user.trainer else None
     if not trainer_id:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
-    
+
     progress_service = ProgressService(db)
     progress = progress_service.create(progress_in, trainer_id=trainer_id)
     return progress
@@ -94,7 +111,7 @@ def read_progress_entry(
     progress = progress_service.get(progress_id)
     if not progress:
         raise HTTPException(status_code=404, detail="Progress entry not found")
-    
+
     # Check access permissions
     if current_user.is_trainer:
         trainer_id = current_user.trainer.id if current_user.trainer else None
@@ -102,10 +119,10 @@ def read_progress_entry(
             raise HTTPException(status_code=403, detail="Access denied")
     else:
         # Client can only access their own progress
-        client = current_user.client if hasattr(current_user, 'client') else None
+        client = current_user.client if hasattr(current_user, "client") else None
         if not client or progress.client_id != client.id:
             raise HTTPException(status_code=403, detail="Access denied")
-    
+
     return progress
 
 
@@ -121,17 +138,19 @@ def update_progress(
     Update progress entry.
     """
     if not current_user.is_trainer:
-        raise HTTPException(status_code=403, detail="Only trainers can update progress entries")
-    
+        raise HTTPException(
+            status_code=403, detail="Only trainers can update progress entries"
+        )
+
     progress_service = ProgressService(db)
     progress = progress_service.get(progress_id)
     if not progress:
         raise HTTPException(status_code=404, detail="Progress entry not found")
-    
+
     trainer_id = current_user.trainer.id if current_user.trainer else None
     if progress.trainer_id != trainer_id:
         raise HTTPException(status_code=403, detail="Access denied")
-    
+
     progress = progress_service.update(progress, progress_in)
     return progress
 
@@ -147,17 +166,19 @@ def delete_progress(
     Delete progress entry.
     """
     if not current_user.is_trainer:
-        raise HTTPException(status_code=403, detail="Only trainers can delete progress entries")
-    
+        raise HTTPException(
+            status_code=403, detail="Only trainers can delete progress entries"
+        )
+
     progress_service = ProgressService(db)
     progress = progress_service.get(progress_id)
     if not progress:
         raise HTTPException(status_code=404, detail="Progress entry not found")
-    
+
     trainer_id = current_user.trainer.id if current_user.trainer else None
     if progress.trainer_id != trainer_id:
         raise HTTPException(status_code=403, detail="Access denied")
-    
+
     progress_service.remove(progress_id)
     return {"message": "Progress entry deleted successfully"}
 
@@ -175,7 +196,7 @@ def read_workout_logs(
     Retrieve workout logs.
     """
     workout_service = WorkoutLogService(db)
-    
+
     if current_user.is_trainer:
         trainer_id = current_user.trainer.id if current_user.trainer else None
         if not trainer_id:
@@ -185,16 +206,15 @@ def read_workout_logs(
         )
     else:
         # Client can only see their own workout logs
-        client = current_user.client if hasattr(current_user, 'client') else None
+        client = current_user.client if hasattr(current_user, "client") else None
         if not client:
             raise HTTPException(status_code=404, detail="Client profile not found")
-        workouts = workout_service.get_client_workout_logs(client.id, skip=skip, limit=limit)
-    
+        workouts = workout_service.get_client_workout_logs(
+            client.id, skip=skip, limit=limit
+        )
+
     return WorkoutLogListResponse(
-        workout_logs=workouts,
-        total=len(workouts),
-        page=skip // limit + 1,
-        size=limit
+        workout_logs=workouts, total=len(workouts), page=skip // limit + 1, size=limit
     )
 
 
@@ -215,13 +235,13 @@ def create_workout_log(
             raise HTTPException(status_code=404, detail="Trainer profile not found")
     else:
         # For clients, we need to find their trainer
-        client = current_user.client if hasattr(current_user, 'client') else None
+        client = current_user.client if hasattr(current_user, "client") else None
         if not client:
             raise HTTPException(status_code=404, detail="Client profile not found")
         trainer_id = client.trainer_id
         # Set client_id for the workout
         workout_in.client_id = client.id
-    
+
     workout_service = WorkoutLogService(db)
     workout = workout_service.create(workout_in, trainer_id=trainer_id)
     return workout
@@ -245,10 +265,10 @@ def get_workout_stats(
         # This would need additional validation in a real implementation
     else:
         # Client can only access their own stats
-        client = current_user.client if hasattr(current_user, 'client') else None
+        client = current_user.client if hasattr(current_user, "client") else None
         if not client or client.id != client_id:
             raise HTTPException(status_code=403, detail="Access denied")
-    
+
     workout_service = WorkoutLogService(db)
     stats = workout_service.get_workout_stats(client_id, days)
     return stats
@@ -268,27 +288,27 @@ def read_goals(
     Retrieve goals.
     """
     goal_service = GoalService(db)
-    
+
     if current_user.is_trainer:
         trainer_id = current_user.trainer.id if current_user.trainer else None
         if not trainer_id:
             raise HTTPException(status_code=404, detail="Trainer profile not found")
         goals = goal_service.get_multi(
-            skip=skip, limit=limit, trainer_id=trainer_id, 
-            client_id=client_id, is_active=is_active
+            skip=skip,
+            limit=limit,
+            trainer_id=trainer_id,
+            client_id=client_id,
+            is_active=is_active,
         )
     else:
         # Client can only see their own goals
-        client = current_user.client if hasattr(current_user, 'client') else None
+        client = current_user.client if hasattr(current_user, "client") else None
         if not client:
             raise HTTPException(status_code=404, detail="Client profile not found")
         goals = goal_service.get_client_goals(client.id, is_active=is_active)
-    
+
     return GoalListResponse(
-        goals=goals,
-        total=len(goals),
-        page=skip // limit + 1,
-        size=limit
+        goals=goals, total=len(goals), page=skip // limit + 1, size=limit
     )
 
 
@@ -304,11 +324,11 @@ def create_goal(
     """
     if not current_user.is_trainer:
         raise HTTPException(status_code=403, detail="Only trainers can create goals")
-    
+
     trainer_id = current_user.trainer.id if current_user.trainer else None
     if not trainer_id:
         raise HTTPException(status_code=404, detail="Trainer profile not found")
-    
+
     goal_service = GoalService(db)
     goal = goal_service.create(goal_in, trainer_id=trainer_id)
     return goal
@@ -328,7 +348,7 @@ def mark_goal_achieved(
     goal = goal_service.get(goal_id)
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
-    
+
     # Check access permissions
     if current_user.is_trainer:
         trainer_id = current_user.trainer.id if current_user.trainer else None
@@ -336,9 +356,9 @@ def mark_goal_achieved(
             raise HTTPException(status_code=403, detail="Access denied")
     else:
         # Client can mark their own goals as achieved
-        client = current_user.client if hasattr(current_user, 'client') else None
+        client = current_user.client if hasattr(current_user, "client") else None
         if not client or goal.client_id != client.id:
             raise HTTPException(status_code=403, detail="Access denied")
-    
+
     goal = goal_service.mark_goal_achieved(goal_id)
     return {"message": "Goal marked as achieved", "achieved_date": goal.achieved_date}

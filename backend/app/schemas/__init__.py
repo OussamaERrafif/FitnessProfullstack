@@ -3,46 +3,122 @@ Schemas package initialization.
 """
 
 # Import all schemas for easy access
+from app.schemas.auth import *
 from app.schemas.auth import (
-    Token, TokenPayload, UserBase, UserCreate, UserRegister, 
-    UserUpdate, UserInDBBase, User, UserInDB, UserResponse, UserLogin
-)
-from app.schemas.trainer import (
-    TrainerBase, TrainerCreate, TrainerUpdate, TrainerInDBBase, 
-    Trainer, TrainerResponse
+    Token,
+    TokenPayload,
+    User,
+    UserBase,
+    UserCreate,
+    UserInDB,
+    UserInDBBase,
+    UserLogin,
+    UserRegister,
+    UserResponse,
+    UserUpdate,
 )
 from app.schemas.client import (
-    ClientBase, ClientCreate, ClientUpdate, ClientInDBBase,
-    Client, ClientResponse, ClientListResponse
+    Client,
+    ClientBase,
+    ClientCreate,
+    ClientInDBBase,
+    ClientListResponse,
+    ClientResponse,
+    ClientUpdate,
 )
 from app.schemas.exercise import (
-    ExerciseBase, ExerciseCreate, ExerciseUpdate, ExerciseInDBBase,
-    Exercise, ExerciseResponse, ExerciseListResponse, ExerciseSearchQuery
-)
-from app.schemas.program import (
-    ProgramExerciseBase, ProgramExerciseCreate, ProgramExerciseUpdate, ProgramExerciseResponse,
-    ProgramBase, ProgramCreate, ProgramUpdate, ProgramInDBBase,
-    Program, ProgramResponse, ProgramListResponse
+    Exercise,
+    ExerciseBase,
+    ExerciseCreate,
+    ExerciseInDBBase,
+    ExerciseListResponse,
+    ExerciseResponse,
+    ExerciseSearchQuery,
+    ExerciseUpdate,
 )
 from app.schemas.meal import (
-    MealBase, MealCreate, MealUpdate, MealInDBBase, Meal, MealResponse, MealListResponse,
-    MealPlanMealBase, MealPlanMealCreate, MealPlanMealResponse,
-    MealPlanBase, MealPlanCreate, MealPlanUpdate, MealPlanInDBBase,
-    MealPlan, MealPlanResponse, MealPlanListResponse
+    Meal,
+    MealBase,
+    MealCreate,
+    MealInDBBase,
+    MealListResponse,
+    MealPlan,
+    MealPlanBase,
+    MealPlanCreate,
+    MealPlanInDBBase,
+    MealPlanListResponse,
+    MealPlanMealBase,
+    MealPlanMealCreate,
+    MealPlanMealResponse,
+    MealPlanResponse,
+    MealPlanUpdate,
+    MealResponse,
+    MealUpdate,
 )
 from app.schemas.payment import (
-    PaymentBase, PaymentCreate, PaymentUpdate, PaymentInDBBase, Payment, PaymentResponse, PaymentListResponse,
-    SubscriptionBase, SubscriptionCreate, SubscriptionUpdate, SubscriptionInDBBase, 
-    Subscription, SubscriptionResponse,
-    PaymentMethodBase, PaymentMethodCreate, PaymentMethodResponse,
-    StripeWebhookPayload
+    Payment,
+    PaymentBase,
+    PaymentCreate,
+    PaymentInDBBase,
+    PaymentListResponse,
+    PaymentMethodBase,
+    PaymentMethodCreate,
+    PaymentMethodResponse,
+    PaymentResponse,
+    PaymentUpdate,
+    StripeWebhookPayload,
+    Subscription,
+    SubscriptionBase,
+    SubscriptionCreate,
+    SubscriptionInDBBase,
+    SubscriptionResponse,
+    SubscriptionUpdate,
+)
+from app.schemas.program import (
+    Program,
+    ProgramBase,
+    ProgramCreate,
+    ProgramExerciseBase,
+    ProgramExerciseCreate,
+    ProgramExerciseResponse,
+    ProgramExerciseUpdate,
+    ProgramInDBBase,
+    ProgramListResponse,
+    ProgramResponse,
+    ProgramUpdate,
 )
 from app.schemas.progress import (
-    ProgressBase, ProgressCreate, ProgressUpdate, ProgressInDBBase, Progress, ProgressResponse, ProgressListResponse,
-    ExerciseLogBase, ExerciseLogCreate, ExerciseLogResponse,
-    WorkoutLogBase, WorkoutLogCreate, WorkoutLogUpdate, WorkoutLogInDBBase, WorkoutLog, WorkoutLogResponse, WorkoutLogListResponse,
-    GoalBase, GoalCreate, GoalUpdate, GoalInDBBase, Goal, GoalResponse, GoalListResponse
+    ExerciseLogBase,
+    ExerciseLogCreate,
+    ExerciseLogResponse,
+    Goal,
+    GoalBase,
+    GoalCreate,
+    GoalInDBBase,
+    GoalListResponse,
+    GoalResponse,
+    GoalUpdate,
+    Progress,
+    ProgressBase,
+    ProgressCreate,
+    ProgressInDBBase,
+    ProgressListResponse,
+    ProgressResponse,
+    ProgressUpdate,
+    WorkoutLog,
+    WorkoutLogBase,
+    WorkoutLogCreate,
+    WorkoutLogInDBBase,
+    WorkoutLogListResponse,
+    WorkoutLogResponse,
+    WorkoutLogUpdate,
 )
-
-from app.schemas.auth import *
 from app.schemas.trainer import *
+from app.schemas.trainer import (
+    Trainer,
+    TrainerBase,
+    TrainerCreate,
+    TrainerInDBBase,
+    TrainerResponse,
+    TrainerUpdate,
+)

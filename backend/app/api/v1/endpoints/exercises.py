@@ -11,8 +11,11 @@ from app.api.v1.endpoints.auth import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.exercise import (
-    ExerciseCreate, ExerciseResponse, ExerciseUpdate, 
-    ExerciseListResponse, ExerciseSearchQuery
+    ExerciseCreate,
+    ExerciseListResponse,
+    ExerciseResponse,
+    ExerciseSearchQuery,
+    ExerciseUpdate,
 )
 from app.services.exercise_service import ExerciseService
 
@@ -32,12 +35,9 @@ def read_exercises(
     exercise_service = ExerciseService(db)
     exercises = exercise_service.get_multi(skip=skip, limit=limit)
     total = exercise_service.count()
-    
+
     return ExerciseListResponse(
-        exercises=exercises,
-        total=total,
-        page=skip // limit + 1,
-        size=limit
+        exercises=exercises, total=total, page=skip // limit + 1, size=limit
     )
 
 
@@ -52,8 +52,10 @@ def create_exercise(
     Create new exercise.
     """
     if not current_user.is_trainer and not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Only trainers and admins can create exercises")
-    
+        raise HTTPException(
+            status_code=403, detail="Only trainers and admins can create exercises"
+        )
+
     exercise_service = ExerciseService(db)
     exercise = exercise_service.create(exercise_in)
     return exercise
@@ -88,13 +90,15 @@ def update_exercise(
     Update exercise.
     """
     if not current_user.is_trainer and not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Only trainers and admins can update exercises")
-    
+        raise HTTPException(
+            status_code=403, detail="Only trainers and admins can update exercises"
+        )
+
     exercise_service = ExerciseService(db)
     exercise = exercise_service.get(exercise_id)
     if not exercise:
         raise HTTPException(status_code=404, detail="Exercise not found")
-    
+
     exercise = exercise_service.update(exercise, exercise_in)
     return exercise
 
@@ -110,13 +114,15 @@ def delete_exercise(
     Delete exercise.
     """
     if not current_user.is_trainer and not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Only trainers and admins can delete exercises")
-    
+        raise HTTPException(
+            status_code=403, detail="Only trainers and admins can delete exercises"
+        )
+
     exercise_service = ExerciseService(db)
     exercise = exercise_service.get(exercise_id)
     if not exercise:
         raise HTTPException(status_code=404, detail="Exercise not found")
-    
+
     exercise_service.remove(exercise_id)
     return {"message": "Exercise deleted successfully"}
 
@@ -136,12 +142,9 @@ def search_exercises(
     exercise_service = ExerciseService(db)
     exercises = exercise_service.search(search_query, skip=skip, limit=limit)
     total = len(exercises)  # For search results, we'll use the current count
-    
+
     return ExerciseListResponse(
-        exercises=exercises,
-        total=total,
-        page=skip // limit + 1,
-        size=limit
+        exercises=exercises, total=total, page=skip // limit + 1, size=limit
     )
 
 
@@ -184,10 +187,7 @@ def get_exercises_by_category(
     exercise_service = ExerciseService(db)
     exercises = exercise_service.get_by_category(category, skip=skip, limit=limit)
     total = len(exercises)
-    
+
     return ExerciseListResponse(
-        exercises=exercises,
-        total=total,
-        page=skip // limit + 1,
-        size=limit
+        exercises=exercises, total=total, page=skip // limit + 1, size=limit
     )

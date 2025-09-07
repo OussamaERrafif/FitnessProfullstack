@@ -13,7 +13,7 @@ from app.core import security
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.auth import Token, UserLogin, UserRegister, UserResponse
+from app.schemas.auth import Token, UserRegister, UserResponse
 from app.services.user_service import UserService
 
 router = APIRouter()
@@ -31,16 +31,16 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     username = security.verify_token(token)
     if username is None:
         raise credentials_exception
-    
+
     user_service = UserService(db)
     user = user_service.get_by_email(username)
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 
@@ -54,15 +54,14 @@ def register(
     Register new user.
     """
     user_service = UserService(db)
-    
+
     # Check if user already exists
     user = user_service.get_by_email(user_in.email)
     if user:
         raise HTTPException(
-            status_code=400,
-            detail="User with this email already exists"
+            status_code=400, detail="User with this email already exists"
         )
-    
+
     # Create new user
     user = user_service.create(user_in)
     return user
@@ -70,34 +69,31 @@ def register(
 
 @router.post("/login", response_model=Token)
 def login(
-    db: Session = Depends(get_db),
-    form_data: OAuth2PasswordRequestForm = Depends()
+    db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests.
     """
     user_service = UserService(db)
     user = user_service.authenticate(
-        email=form_data.username, 
-        password=form_data.password
+        email=form_data.username, password=form_data.password
     )
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect email or password",
         )
     elif not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
         )
-    
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
         user.email, expires_delta=access_token_expires
     )
-    
+
     return {
         "access_token": access_token,
         "token_type": "bearer",

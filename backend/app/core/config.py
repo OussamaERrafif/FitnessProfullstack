@@ -16,10 +16,11 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
-    
+    DEBUG: bool = False
+
     # CORS origins
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
-    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
+    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1", "testserver"]
 
     @field_validator("ALLOWED_HOSTS", mode="before")
     @classmethod
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, list):
             return v
-        return ["localhost", "127.0.0.1"]
+        return ["localhost", "127.0.0.1", "testserver"]
 
     def get_cors_origins(self) -> List[str]:
         """Get CORS origins as a list."""
@@ -58,7 +59,7 @@ class Settings(BaseSettings):
 
     # Redis settings
     REDIS_URL: str = "redis://localhost:6379"
-    
+
     # Email settings
     SMTP_TLS: bool = True
     SMTP_PORT: Optional[int] = None
@@ -80,11 +81,19 @@ class Settings(BaseSettings):
     # File upload settings
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     UPLOAD_DIRECTORY: str = "uploads"
-    ALLOWED_FILE_EXTENSIONS: List[str] = [".jpg", ".jpeg", ".png", ".gif", ".pdf", ".mp4", ".avi"]
+    ALLOWED_FILE_EXTENSIONS: List[str] = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".pdf",
+        ".mp4",
+        ".avi",
+    ]
 
     # Security settings
     ALGORITHM: str = "HS256"
-    
+
     # Celery settings
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"

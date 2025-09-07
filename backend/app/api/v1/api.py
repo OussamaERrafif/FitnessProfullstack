@@ -4,7 +4,16 @@ API v1 router configuration.
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, trainers, clients, exercises, programs, meals, payments, progress
+from app.api.v1.endpoints import (
+    auth,
+    clients,
+    exercises,
+    meals,
+    payments,
+    programs,
+    progress,
+    trainers,
+)
 
 api_router = APIRouter()
 

@@ -2,10 +2,20 @@
 Meal and nutrition models.
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Boolean, Float
+import enum
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
 
 from app.core.database import Base
 
@@ -25,17 +35,19 @@ class Meal(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)
     description = Column(Text)
-    
+
     # Relationships
     trainer_id = Column(Integer, ForeignKey("trainers.id"))
-    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)  # null for templates
-    
+    client_id = Column(
+        Integer, ForeignKey("clients.id"), nullable=True
+    )  # null for templates
+
     # Meal details
     meal_type = Column(String(20))  # breakfast, lunch, dinner, snack
     preparation_time = Column(Integer)  # in minutes
     cooking_time = Column(Integer)  # in minutes
     servings = Column(Integer, default=1)
-    
+
     # Nutritional information
     calories_per_serving = Column(Float)
     protein_grams = Column(Float)
@@ -43,18 +55,18 @@ class Meal(Base):
     fat_grams = Column(Float)
     fiber_grams = Column(Float)
     sugar_grams = Column(Float)
-    
+
     # Additional info
     ingredients = Column(Text)  # JSON or comma-separated
     instructions = Column(Text)
     image_url = Column(String(500))
-    
+
     # Dietary tags
     is_vegetarian = Column(Boolean, default=False)
     is_vegan = Column(Boolean, default=False)
     is_gluten_free = Column(Boolean, default=False)
     is_dairy_free = Column(Boolean, default=False)
-    
+
     # Status
     is_template = Column(Boolean, default=False)  # template meals vs assigned meals
     is_active = Column(Boolean, default=True)
@@ -68,15 +80,16 @@ class Meal(Base):
 
 class MealPlan(Base):
     """Weekly meal plans for clients."""
+
     __tablename__ = "meal_plans"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    
+
     # Relationships
     trainer_id = Column(Integer, ForeignKey("trainers.id"))
     client_id = Column(Integer, ForeignKey("clients.id"))
-    
+
     # Plan details
     start_date = Column(DateTime(timezone=True))
     end_date = Column(DateTime(timezone=True))
@@ -84,7 +97,7 @@ class MealPlan(Base):
     target_protein = Column(Float)
     target_carbs = Column(Float)
     target_fat = Column(Float)
-    
+
     # Status
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -98,16 +111,17 @@ class MealPlan(Base):
 
 class MealPlanMeal(Base):
     """Junction table for MealPlan and Meal."""
+
     __tablename__ = "meal_plan_meals"
 
     id = Column(Integer, primary_key=True, index=True)
     meal_plan_id = Column(Integer, ForeignKey("meal_plans.id"))
     meal_id = Column(Integer, ForeignKey("meals.id"))
-    
+
     # Scheduling
     day_of_week = Column(Integer)  # 1-7 (Monday-Sunday)
     meal_time = Column(String(20))  # breakfast, lunch, dinner, snack
-    
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

@@ -4,8 +4,8 @@ Client service for business logic.
 
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy.orm import Session
 from sqlalchemy import and_
+from sqlalchemy.orm import Session
 
 from app.models.client import Client
 from app.schemas.client import ClientCreate, ClientUpdate
@@ -44,7 +44,7 @@ class ClientService:
         obj_in_data = obj_in.dict()
         obj_in_data["trainer_id"] = trainer_id
         obj_in_data["user_id"] = user_id
-        
+
         db_obj = Client(**obj_in_data)
         self.db.add(db_obj)
         self.db.commit()
@@ -58,10 +58,10 @@ class ClientService:
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-        
+
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)
@@ -86,15 +86,15 @@ class ClientService:
         fitness_level: Optional[str] = None,
         is_active: Optional[bool] = None,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[Client]:
         query = self.db.query(Client)
-        
+
         if trainer_id:
             query = query.filter(Client.trainer_id == trainer_id)
         if fitness_level:
             query = query.filter(Client.fitness_level == fitness_level)
         if is_active is not None:
             query = query.filter(Client.is_active == is_active)
-        
+
         return query.offset(skip).limit(limit).all()

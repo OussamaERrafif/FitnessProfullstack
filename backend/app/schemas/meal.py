@@ -2,10 +2,10 @@
 Meal schemas.
 """
 
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from app.models.meal import MealType
 
@@ -33,9 +33,17 @@ class MealBase(BaseModel):
     is_template: Optional[bool] = False
     is_active: Optional[bool] = True
 
-    @validator('meal_type')
+    @field_validator("meal_type")
+    @classmethod
     def validate_meal_type(cls, v):
-        valid_types = ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout']
+        valid_types = [
+            "breakfast",
+            "lunch",
+            "dinner",
+            "snack",
+            "pre_workout",
+            "post_workout",
+        ]
         if v and v not in valid_types:
             raise ValueError(f'meal_type must be one of: {", ".join(valid_types)}')
         return v

@@ -27,30 +27,28 @@ class UserService:
             email=user_in.email,
             hashed_password=hashed_password,
             full_name=user_in.full_name,
-            is_superuser=getattr(user_in, 'is_superuser', False),
-            is_trainer=getattr(user_in, 'is_trainer', False),
+            is_superuser=getattr(user_in, "is_superuser", False),
+            is_trainer=getattr(user_in, "is_trainer", False),
         )
         self.db.add(db_user)
         self.db.commit()
         self.db.refresh(db_user)
         return db_user
 
-    def update(
-        self, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
-    ) -> User:
+    def update(self, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]) -> User:
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        
+
         if "password" in update_data:
             hashed_password = get_password_hash(update_data["password"])
             del update_data["password"]
             update_data["hashed_password"] = hashed_password
-        
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-        
+
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)
