@@ -20,6 +20,7 @@ class UserBase(BaseModel):
     email: Optional[EmailStr] = None
     is_active: Optional[bool] = True
     is_superuser: bool = False
+    is_trainer: bool = False
     full_name: Optional[str] = None
 
 
@@ -32,6 +33,7 @@ class UserRegister(UserBase):
     email: EmailStr
     password: str
     full_name: str
+    is_trainer: Optional[bool] = False
 
 
 class UserUpdate(UserBase):
