@@ -14,6 +14,7 @@ from slowapi.util import get_remote_address
 
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.exceptions import setup_exception_handlers
 from app.core.logging import logger
 from app.core.middleware import (
     HealthCheckMiddleware,
@@ -46,6 +47,9 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     lifespan=lifespan,
 )
+
+# Setup exception handlers
+setup_exception_handlers(app)
 
 # Add custom middleware (order matters)
 app.add_middleware(LoggingMiddleware)
