@@ -26,15 +26,20 @@ export default function ClientPinLogin() {
     setIsLoading(true)
     
     try {
-      // TODO: Implement actual PIN validation with backend
-      // For now, simulate PIN validation
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock PIN validation - in real app, this would be an API call
-      if (pin === "123456") {
-        router.push(`/client/${pin}`)
+      const response = await fetch('/api/auth/pin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pin }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        router.push(data.redirectUrl)
       } else {
-        setError("Invalid PIN. Please check with your trainer.")
+        setError(data.error || "Invalid PIN. Please check with your trainer.")
       }
     } catch (err) {
       setError("Something went wrong. Please try again.")

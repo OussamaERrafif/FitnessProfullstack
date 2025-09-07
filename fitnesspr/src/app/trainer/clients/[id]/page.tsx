@@ -47,12 +47,13 @@ const mockClient = {
 }
 
 interface ClientProfileProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function ClientProfile({ params }: ClientProfileProps) {
+export default async function ClientProfile({ params }: ClientProfileProps) {
+  const { id } = await params
   return (
     <div>
       {/* Page Header */}
@@ -90,13 +91,13 @@ export default function ClientProfile({ params }: ClientProfileProps) {
           
           <div className="flex space-x-3">
             <Button variant="outline" asChild>
-              <Link href={`/trainer/clients/${params.id}/edit`}>
+              <Link href={`/trainer/clients/${id}/edit`}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Profile
               </Link>
             </Button>
             <Button asChild>
-              <Link href={`/trainer/calendar/new-session?client=${params.id}`}>
+              <Link href={`/trainer/calendar/new-session?client=${id}`}>
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule Session
               </Link>

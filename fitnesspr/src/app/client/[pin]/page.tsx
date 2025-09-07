@@ -1,3 +1,7 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -11,58 +15,116 @@ import {
   Clock,
   Target,
   LogOut,
-  MessageSquare 
+  MessageSquare,
+  Plus
 } from "lucide-react"
 
-// Mock client data
-const mockClientData = {
-  client: {
-    id: "1",
-    name: "Sarah Johnson",
-    pin: "123456",
-    goals: "Weight loss and strength building",
-    trainer: "Alex Thompson"
-  },
+interface ClientData {
+  id: string
+  name: string
+  email: string
+  pin: string
+  trainer: string
   currentTrainingPlan: {
-    id: "1",
-    title: "Full Body Strength & Cardio",
-    description: "4-week program focused on building strength and improving cardiovascular health",
-    exercises: [
-      { name: "Push-ups", sets: 3, reps: 12, completed: true },
-      { name: "Squats", sets: 3, reps: 15, completed: true },
-      { name: "Plank", sets: 3, duration: "30s", completed: false },
-      { name: "Jumping Jacks", sets: 2, reps: 20, completed: false },
-    ]
-  },
+    title: string
+    description: string
+    exercises: Array<{
+      id: number
+      name: string
+      sets: string
+      completed: boolean
+    }>
+  }
   currentMealPlan: {
-    id: "1",
-    title: "Balanced Nutrition Plan",
-    todaysMeals: [
-      { name: "Greek Yogurt with Berries", type: "Breakfast", calories: 250, completed: true },
-      { name: "Grilled Chicken Salad", type: "Lunch", calories: 400, completed: true },
-      { name: "Apple with Almond Butter", type: "Snack", calories: 180, completed: false },
-      { name: "Salmon with Vegetables", type: "Dinner", calories: 450, completed: false },
-    ]
-  },
-  recentProgress: [
-    { date: "2025-09-06", weight: 68.2, notes: "Feeling stronger!" },
-    { date: "2025-09-04", weight: 68.5, notes: "Great workout today" },
-    { date: "2025-09-02", weight: 68.8, notes: "Starting to see progress" },
-  ],
-  upcomingSessions: [
-    { date: "2025-09-08", time: "10:00", type: "Personal Training" },
-    { date: "2025-09-10", time: "14:30", type: "Consultation" },
-  ]
+    title: string
+    todaysMeals: Array<{
+      id: number
+      name: string
+      type: string
+      calories: number
+      completed: boolean
+    }>
+  }
+  recentProgress: Array<{
+    date: string
+    weight: number
+    notes: string
+  }>
+  currentGoal: string
 }
 
 interface ClientDashboardProps {
-  params: {
+  params: Promise<{
     pin: string
-  }
+  }>
 }
 
 export default function ClientDashboard({ params }: ClientDashboardProps) {
-  const { client, currentTrainingPlan, currentMealPlan, recentProgress, upcomingSessions } = mockClientData
+  const [clientData, setClientData] = useState<ClientData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [pin, setPin] = useState<string>("")
+  const router = useRouter()
+
+  useEffect(() => {
+    const fetchClientData = async () => {
+      try {
+        const resolvedParams = await params
+        setPin(resolvedParams.pin)
+        
+        const response = await fetch(`/api/client/${resolvedParams.pin}`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch client data')
+        }
+        
+        const data = await response.json()
+        setClientData(data.client)
+      } catch (err) {
+        setError("Unable to load your dashboard. Please try again.")
+        console.error('Error fetching client data:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchClientData()
+  }, [params])
+
+  const handleSignOut = () => {
+    router.push('/client/pin-login')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !clientData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={() => router.push('/client/pin-login')} className="w-full">
+              Back to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const { currentTrainingPlan, currentMealPlan, recentProgress, currentGoal } = clientData
   
   const completedExercises = currentTrainingPlan.exercises.filter(ex => ex.completed).length
   const exerciseProgress = (completedExercises / currentTrainingPlan.exercises.length) * 100
@@ -70,17 +132,23 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
   const completedMeals = currentMealPlan.todaysMeals.filter(meal => meal.completed).length
   const mealProgress = (completedMeals / currentMealPlan.todaysMeals.length) * 100
 
+  const currentWeight = recentProgress[0]?.weight || 0
+  const previousWeight = recentProgress[1]?.weight || currentWeight
+  const weightChange = currentWeight - previousWeight
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Welcome back, {client.name}!</h1>
-              <p className="text-gray-600">Trainer: {client.trainer}</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back, {clientData.name}!
+              </h1>
+              <p className="text-sm text-gray-600">Trainer: {clientData.trainer}</p>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
@@ -88,56 +156,58 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
         </div>
       </header>
 
-      <div className="p-6">
-        {/* Progress Overview */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Today's Workout</CardTitle>
+              <Dumbbell className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl font-bold">{completedExercises}/{currentTrainingPlan.exercises.length}</span>
-                <Dumbbell className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="text-2xl font-bold">{completedExercises}/{currentTrainingPlan.exercises.length}</div>
+                <Dumbbell className="h-4 w-4 text-blue-600" />
               </div>
               <Progress value={exerciseProgress} className="mb-2" />
-              <p className="text-sm text-gray-600">exercises completed</p>
+              <p className="text-xs text-muted-foreground">exercises completed</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Today's Nutrition</CardTitle>
+              <Apple className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl font-bold">{completedMeals}/{currentMealPlan.todaysMeals.length}</span>
-                <Apple className="h-5 w-5 text-green-600" />
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="text-2xl font-bold">{completedMeals}/{currentMealPlan.todaysMeals.length}</div>
+                <Apple className="h-4 w-4 text-green-600" />
               </div>
               <Progress value={mealProgress} className="mb-2" />
-              <p className="text-sm text-gray-600">meals completed</p>
+              <p className="text-xs text-muted-foreground">meals completed</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Weight Progress</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl font-bold">{recentProgress[0]?.weight} kg</span>
-                <TrendingUp className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="text-2xl font-bold">{currentWeight} kg</div>
+                <TrendingUp className="h-4 w-4 text-purple-600" />
               </div>
-              <p className="text-sm text-gray-600">
-                {recentProgress.length > 1 && 
-                  `${(recentProgress[0].weight - recentProgress[1].weight).toFixed(1)} kg since last log`
-                }
+              <p className="text-xs text-muted-foreground">
+                {weightChange >= 0 ? '+' : ''}{weightChange.toFixed(1)} kg since last log
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
+        {/* Detailed Tabs */}
         <Tabs defaultValue="training" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="training">Training</TabsTrigger>
@@ -146,33 +216,33 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
             <TabsTrigger value="sessions">Sessions</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="training">
+          {/* Training Tab */}
+          <TabsContent value="training" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{currentTrainingPlan.title}</CardTitle>
+                <CardTitle className="text-xl">{currentTrainingPlan.title}</CardTitle>
                 <CardDescription>{currentTrainingPlan.description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {currentTrainingPlan.exercises.map((exercise, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  {currentTrainingPlan.exercises.map((exercise) => (
+                    <div key={exercise.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          exercise.completed ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'
-                        }`}>
-                          <Dumbbell className="h-4 w-4" />
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Dumbbell className="h-4 w-4 text-blue-600" />
                         </div>
                         <div>
                           <p className="font-medium">{exercise.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {exercise.sets} sets × {exercise.reps || exercise.duration}
-                          </p>
+                          <p className="text-sm text-gray-600">{exercise.sets}</p>
                         </div>
                       </div>
-                      {exercise.completed && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          Completed
-                        </Badge>
+                      {exercise.completed ? (
+                        <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                      ) : (
+                        <Button size="sm" variant="outline">
+                          <Plus className="h-4 w-4 mr-1" />
+                          Mark Complete
+                        </Button>
                       )}
                     </div>
                   ))}
@@ -181,33 +251,33 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="nutrition">
+          {/* Nutrition Tab */}
+          <TabsContent value="nutrition" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{currentMealPlan.title}</CardTitle>
+                <CardTitle className="text-xl">{currentMealPlan.title}</CardTitle>
                 <CardDescription>Today's meals and nutrition targets</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {currentMealPlan.todaysMeals.map((meal, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  {currentMealPlan.todaysMeals.map((meal) => (
+                    <div key={meal.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          meal.completed ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'
-                        }`}>
-                          <Apple className="h-4 w-4" />
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Apple className="h-4 w-4 text-green-600" />
                         </div>
                         <div>
                           <p className="font-medium">{meal.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {meal.type} • {meal.calories} calories
-                          </p>
+                          <p className="text-sm text-gray-600">{meal.type} • {meal.calories} calories</p>
                         </div>
                       </div>
-                      {meal.completed && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          Logged
-                        </Badge>
+                      {meal.completed ? (
+                        <Badge className="bg-green-100 text-green-800">Logged</Badge>
+                      ) : (
+                        <Button size="sm" variant="outline">
+                          <Plus className="h-4 w-4 mr-1" />
+                          Log Meal
+                        </Button>
                       )}
                     </div>
                   ))}
@@ -216,46 +286,45 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="progress">
-            <div className="grid lg:grid-cols-2 gap-6">
+          {/* Progress Tab */}
+          <TabsContent value="progress" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Weight Tracking</CardTitle>
+                  <CardTitle className="text-xl">Weight Tracking</CardTitle>
                   <CardDescription>Your recent weight measurements</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {recentProgress.map((entry, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <p className="font-medium">{entry.weight} kg</p>
+                          <p className="font-semibold">{entry.weight} kg</p>
                           <p className="text-sm text-gray-600">{entry.date}</p>
                         </div>
-                        {entry.notes && (
-                          <p className="text-sm text-gray-600 italic">"{entry.notes}"</p>
-                        )}
+                        <p className="text-sm italic text-gray-600">"{entry.notes}"</p>
                       </div>
                     ))}
+                    <Button className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Log New Weight
+                    </Button>
                   </div>
-                  <Button variant="outline" className="w-full mt-4">
-                    <Target className="h-4 w-4 mr-2" />
-                    Log New Weight
-                  </Button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Goals</CardTitle>
+                  <CardTitle className="text-xl">Goals</CardTitle>
                   <CardDescription>Your fitness objectives</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="p-4 bg-blue-50 rounded-lg">
-                      <p className="font-medium text-blue-900">Current Goal</p>
-                      <p className="text-blue-700">{client.goals}</p>
+                      <p className="text-sm font-medium text-blue-900">Current Goal</p>
+                      <p className="text-blue-800">{currentGoal}</p>
                     </div>
-                    <Button variant="outline" className="w-full">
+                    <Button className="w-full" variant="outline">
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Send Feedback to Trainer
                     </Button>
@@ -265,42 +334,24 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="sessions">
+          {/* Sessions Tab */}
+          <TabsContent value="sessions" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Upcoming Sessions</CardTitle>
+                <CardTitle className="text-xl">Upcoming Sessions</CardTitle>
                 <CardDescription>Your scheduled training sessions</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {upcomingSessions.map((session, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Calendar className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{session.type}</p>
-                          <p className="text-sm text-gray-600">
-                            {session.date} at {session.time}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge variant="outline">Scheduled</Badge>
-                    </div>
-                  ))}
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No upcoming sessions scheduled</p>
+                  <p className="text-sm">Contact your trainer to book a session</p>
                 </div>
-                {upcomingSessions.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No upcoming sessions scheduled</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </div>
   )
 }
