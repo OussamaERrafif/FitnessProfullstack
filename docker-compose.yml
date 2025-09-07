@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_SQLITE=true
+      - SQLITE_URL=sqlite:///./fitnesspr.db
+      - SECRET_KEY=docker-secret-key-change-in-production
+      - BACKEND_CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+      - PROJECT_NAME=FitnessPr Backend
+      - API_V1_STR=/api/v1
+    volumes:
+      - backend_data:/app
+    networks:
+      - fitnesspr_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: ./fitnesspr
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=docker-nextauth-secret-change-in-production
+    depends_on:
+      - backend
+    networks:
+      - fitnesspr_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  backend_data:
+
+networks:
+  fitnesspr_network:
+    driver: bridge
