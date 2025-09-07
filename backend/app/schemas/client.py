@@ -2,10 +2,10 @@
 Client schemas.
 """
 
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 
 class ClientBase(BaseModel):
@@ -22,16 +22,20 @@ class ClientBase(BaseModel):
     emergency_phone: Optional[str] = None
     is_active: Optional[bool] = True
 
-    @validator('fitness_level')
+    @field_validator("fitness_level")
+    @classmethod
     def validate_fitness_level(cls, v):
-        if v and v.lower() not in ['beginner', 'intermediate', 'advanced']:
-            raise ValueError('fitness_level must be beginner, intermediate, or advanced')
+        if v and v.lower() not in ["beginner", "intermediate", "advanced"]:
+            raise ValueError(
+                "fitness_level must be beginner, intermediate, or advanced"
+            )
         return v.lower() if v else v
 
-    @validator('gender')
+    @field_validator("gender")
+    @classmethod
     def validate_gender(cls, v):
-        if v and v.lower() not in ['male', 'female', 'other']:
-            raise ValueError('gender must be male, female, or other')
+        if v and v.lower() not in ["male", "female", "other"]:
+            raise ValueError("gender must be male, female, or other")
         return v.lower() if v else v
 
 
@@ -62,7 +66,7 @@ class Client(ClientInDBBase):
 class ClientResponse(ClientInDBBase):
     # Include trainer info if needed
     trainer: Optional[dict] = None
-    
+
     class Config:
         from_attributes = True
 

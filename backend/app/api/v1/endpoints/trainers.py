@@ -78,7 +78,7 @@ def update_trainer(
     trainer = trainer_service.get(trainer_id)
     if not trainer:
         raise HTTPException(status_code=404, detail="Trainer not found")
-    
+
     trainer = trainer_service.update(trainer, trainer_in)
     return trainer
 
@@ -97,6 +97,6 @@ def delete_trainer(
     trainer = trainer_service.get(trainer_id)
     if not trainer:
         raise HTTPException(status_code=404, detail="Trainer not found")
-    
+
     trainer_service.remove(trainer_id)
     return {"message": "Trainer deleted successfully"}

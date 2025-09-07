@@ -20,15 +20,8 @@ class TrainerService:
     def get_by_user_id(self, user_id: int) -> Optional[Trainer]:
         return self.db.query(Trainer).filter(Trainer.user_id == user_id).first()
 
-    def get_multi(
-        self, *, skip: int = 0, limit: int = 100
-    ) -> List[Trainer]:
-        return (
-            self.db.query(Trainer)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+    def get_multi(self, *, skip: int = 0, limit: int = 100) -> List[Trainer]:
+        return self.db.query(Trainer).offset(skip).limit(limit).all()
 
     def create(self, trainer_in: TrainerCreate, user_id: int) -> Trainer:
         db_trainer = Trainer(
@@ -51,10 +44,10 @@ class TrainerService:
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-        
+
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)

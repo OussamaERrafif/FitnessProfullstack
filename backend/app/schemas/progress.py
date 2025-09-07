@@ -2,10 +2,10 @@
 Progress tracking schemas.
 """
 
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from app.models.progress import MeasurementType
 
@@ -28,10 +28,11 @@ class ProgressBase(BaseModel):
     notes: Optional[str] = None
     trainer_notes: Optional[str] = None
 
-    @validator('body_fat_percentage')
+    @field_validator("body_fat_percentage")
+    @classmethod
     def validate_body_fat(cls, v):
         if v is not None and (v < 0 or v > 100):
-            raise ValueError('body_fat_percentage must be between 0 and 100')
+            raise ValueError("body_fat_percentage must be between 0 and 100")
         return v
 
 

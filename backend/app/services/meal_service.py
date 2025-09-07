@@ -2,14 +2,14 @@
 Meal service for business logic.
 """
 
-from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
 
 from app.models.meal import Meal, MealPlan, MealPlanMeal
-from app.schemas.meal import MealCreate, MealUpdate, MealPlanCreate, MealPlanUpdate
+from app.schemas.meal import MealCreate, MealPlanCreate, MealPlanUpdate, MealUpdate
 
 
 class MealService:
@@ -20,8 +20,13 @@ class MealService:
         return self.db.query(Meal).filter(Meal.id == id).first()
 
     def get_multi(
-        self, *, skip: int = 0, limit: int = 100, trainer_id: Optional[int] = None, 
-        client_id: Optional[int] = None, is_template: Optional[bool] = None
+        self,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        trainer_id: Optional[int] = None,
+        client_id: Optional[int] = None,
+        is_template: Optional[bool] = None,
     ) -> List[Meal]:
         query = self.db.query(Meal)
         if trainer_id:
@@ -35,24 +40,22 @@ class MealService:
     def create(self, obj_in: MealCreate, trainer_id: int) -> Meal:
         obj_in_data = obj_in.dict()
         obj_in_data["trainer_id"] = trainer_id
-        
+
         db_obj = Meal(**obj_in_data)
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)
         return db_obj
 
-    def update(
-        self, db_obj: Meal, obj_in: Union[MealUpdate, Dict[str, Any]]
-    ) -> Meal:
+    def update(self, db_obj: Meal, obj_in: Union[MealUpdate, Dict[str, Any]]) -> Meal:
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-        
+
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)
@@ -64,49 +67,51 @@ class MealService:
         self.db.commit()
         return obj
 
-    def get_templates(self, trainer_id: int, skip: int = 0, limit: int = 100) -> List[Meal]:
+    def get_templates(
+        self, trainer_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Meal]:
         """Get meal templates created by a trainer."""
         return (
             self.db.query(Meal)
-            .filter(and_(
-                Meal.trainer_id == trainer_id,
-                Meal.is_template == True,
-                Meal.is_active == True
-            ))
+            .filter(
+                and_(
+                    Meal.trainer_id == trainer_id,
+                    Meal.is_template == True,
+                    Meal.is_active == True,
+                )
+            )
             .offset(skip)
             .limit(limit)
             .all()
         )
 
-    def get_client_meals(self, client_id: int, skip: int = 0, limit: int = 100) -> List[Meal]:
+    def get_client_meals(
+        self, client_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Meal]:
         """Get meals assigned to a specific client."""
         return (
             self.db.query(Meal)
-            .filter(and_(
-                Meal.client_id == client_id,
-                Meal.is_active == True
-            ))
+            .filter(and_(Meal.client_id == client_id, Meal.is_active == True))
             .offset(skip)
             .limit(limit)
             .all()
         )
 
     def search_by_dietary_restrictions(
-        self, 
+        self,
         trainer_id: int,
         is_vegetarian: Optional[bool] = None,
         is_vegan: Optional[bool] = None,
         is_gluten_free: Optional[bool] = None,
         is_dairy_free: Optional[bool] = None,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[Meal]:
         """Search meals by dietary restrictions."""
-        query = self.db.query(Meal).filter(and_(
-            Meal.trainer_id == trainer_id,
-            Meal.is_active == True
-        ))
-        
+        query = self.db.query(Meal).filter(
+            and_(Meal.trainer_id == trainer_id, Meal.is_active == True)
+        )
+
         if is_vegetarian is not None:
             query = query.filter(Meal.is_vegetarian == is_vegetarian)
         if is_vegan is not None:
@@ -115,12 +120,14 @@ class MealService:
             query = query.filter(Meal.is_gluten_free == is_gluten_free)
         if is_dairy_free is not None:
             query = query.filter(Meal.is_dairy_free == is_dairy_free)
-        
+
         return query.offset(skip).limit(limit).all()
 
     def count(
-        self, trainer_id: Optional[int] = None, client_id: Optional[int] = None, 
-        is_template: Optional[bool] = None
+        self,
+        trainer_id: Optional[int] = None,
+        client_id: Optional[int] = None,
+        is_template: Optional[bool] = None,
     ) -> int:
         query = self.db.query(Meal).filter(Meal.is_active == True)
         if trainer_id:
@@ -140,8 +147,12 @@ class MealPlanService:
         return self.db.query(MealPlan).filter(MealPlan.id == id).first()
 
     def get_multi(
-        self, *, skip: int = 0, limit: int = 100, trainer_id: Optional[int] = None, 
-        client_id: Optional[int] = None
+        self,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        trainer_id: Optional[int] = None,
+        client_id: Optional[int] = None,
     ) -> List[MealPlan]:
         query = self.db.query(MealPlan)
         if trainer_id:
@@ -153,20 +164,19 @@ class MealPlanService:
     def create(self, obj_in: MealPlanCreate, trainer_id: int) -> MealPlan:
         obj_in_data = obj_in.dict(exclude={"meals"})
         obj_in_data["trainer_id"] = trainer_id
-        
+
         db_obj = MealPlan(**obj_in_data)
         self.db.add(db_obj)
         self.db.flush()  # Get the ID without committing
-        
+
         # Add meals to the plan
         if obj_in.meals:
             for meal_data in obj_in.meals:
                 meal_plan_meal = MealPlanMeal(
-                    meal_plan_id=db_obj.id,
-                    **meal_data.dict()
+                    meal_plan_id=db_obj.id, **meal_data.dict()
                 )
                 self.db.add(meal_plan_meal)
-        
+
         self.db.commit()
         self.db.refresh(db_obj)
         return db_obj
@@ -178,10 +188,10 @@ class MealPlanService:
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-        
+
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)
@@ -197,10 +207,7 @@ class MealPlanService:
 
     def add_meal_to_plan(self, meal_plan_id: int, meal_data: dict) -> MealPlanMeal:
         """Add a meal to a meal plan."""
-        meal_plan_meal = MealPlanMeal(
-            meal_plan_id=meal_plan_id,
-            **meal_data
-        )
+        meal_plan_meal = MealPlanMeal(meal_plan_id=meal_plan_id, **meal_data)
         self.db.add(meal_plan_meal)
         self.db.commit()
         self.db.refresh(meal_plan_meal)
@@ -210,10 +217,12 @@ class MealPlanService:
         """Remove a meal from a meal plan."""
         meal_plan_meal = (
             self.db.query(MealPlanMeal)
-            .filter(and_(
-                MealPlanMeal.meal_plan_id == meal_plan_id,
-                MealPlanMeal.meal_id == meal_id
-            ))
+            .filter(
+                and_(
+                    MealPlanMeal.meal_plan_id == meal_plan_id,
+                    MealPlanMeal.meal_id == meal_id,
+                )
+            )
             .first()
         )
         if meal_plan_meal:
@@ -226,11 +235,15 @@ class MealPlanService:
         """Get the currently active meal plan for a client."""
         return (
             self.db.query(MealPlan)
-            .filter(and_(
-                MealPlan.client_id == client_id,
-                MealPlan.is_active == True,
-                MealPlan.start_date <= datetime.now(),
-                or_(MealPlan.end_date.is_(None), MealPlan.end_date >= datetime.now())
-            ))
+            .filter(
+                and_(
+                    MealPlan.client_id == client_id,
+                    MealPlan.is_active == True,
+                    MealPlan.start_date <= datetime.now(),
+                    or_(
+                        MealPlan.end_date.is_(None), MealPlan.end_date >= datetime.now()
+                    ),
+                )
+            )
             .first()
         )

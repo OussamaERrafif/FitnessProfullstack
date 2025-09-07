@@ -2,18 +2,24 @@
 Models package initialization.
 """
 
-from app.models.user import User
-from app.models.trainer import Trainer
 from app.models.client import Client
-from app.models.exercise import Exercise, DifficultyLevel, EquipmentType
-from app.models.program import Program, ProgramExercise
+from app.models.exercise import DifficultyLevel, EquipmentType, Exercise
 from app.models.meal import Meal, MealPlan, MealPlanMeal, MealType
-from app.models.payment import Payment, Subscription, PaymentMethod, PaymentStatus, SubscriptionStatus
-from app.models.progress import Progress, WorkoutLog, ExerciseLog, Goal, MeasurementType
+from app.models.payment import (
+    Payment,
+    PaymentMethod,
+    PaymentStatus,
+    Subscription,
+    SubscriptionStatus,
+)
+from app.models.program import Program, ProgramExercise
+from app.models.progress import ExerciseLog, Goal, MeasurementType, Progress, WorkoutLog
+from app.models.trainer import Trainer
+from app.models.user import User
 
 __all__ = [
     "User",
-    "Trainer", 
+    "Trainer",
     "Client",
     "Exercise",
     "DifficultyLevel",
@@ -21,7 +27,7 @@ __all__ = [
     "Program",
     "ProgramExercise",
     "Meal",
-    "MealPlan", 
+    "MealPlan",
     "MealPlanMeal",
     "MealType",
     "Payment",

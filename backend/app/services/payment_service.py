@@ -2,15 +2,20 @@
 Payment service for business logic and Stripe integration.
 """
 
-from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
 
-from app.models.payment import Payment, Subscription, PaymentMethod
-from app.schemas.payment import PaymentCreate, PaymentUpdate, SubscriptionCreate, SubscriptionUpdate
 from app.core.config import settings
+from app.models.payment import Payment, PaymentMethod, Subscription
+from app.schemas.payment import (
+    PaymentCreate,
+    PaymentUpdate,
+    SubscriptionCreate,
+    SubscriptionUpdate,
+)
 
 
 class PaymentService:
@@ -21,13 +26,19 @@ class PaymentService:
         return self.db.query(Payment).filter(Payment.id == id).first()
 
     def get_by_stripe_intent(self, stripe_payment_intent_id: str) -> Optional[Payment]:
-        return self.db.query(Payment).filter(
-            Payment.stripe_payment_intent_id == stripe_payment_intent_id
-        ).first()
+        return (
+            self.db.query(Payment)
+            .filter(Payment.stripe_payment_intent_id == stripe_payment_intent_id)
+            .first()
+        )
 
     def get_multi(
-        self, *, skip: int = 0, limit: int = 100, client_id: Optional[int] = None, 
-        trainer_id: Optional[int] = None
+        self,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        client_id: Optional[int] = None,
+        trainer_id: Optional[int] = None,
     ) -> List[Payment]:
         query = self.db.query(Payment)
         if client_id:
@@ -51,10 +62,10 @@ class PaymentService:
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-        
+
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)
@@ -66,7 +77,9 @@ class PaymentService:
         self.db.commit()
         return obj
 
-    def count(self, client_id: Optional[int] = None, trainer_id: Optional[int] = None) -> int:
+    def count(
+        self, client_id: Optional[int] = None, trainer_id: Optional[int] = None
+    ) -> int:
         query = self.db.query(Payment)
         if client_id:
             query = query.filter(Payment.client_id == client_id)
@@ -74,7 +87,9 @@ class PaymentService:
             query = query.filter(Payment.trainer_id == trainer_id)
         return query.count()
 
-    def get_client_payments(self, client_id: int, skip: int = 0, limit: int = 100) -> List[Payment]:
+    def get_client_payments(
+        self, client_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Payment]:
         """Get all payments for a specific client."""
         return (
             self.db.query(Payment)
@@ -85,7 +100,9 @@ class PaymentService:
             .all()
         )
 
-    def get_trainer_payments(self, trainer_id: int, skip: int = 0, limit: int = 100) -> List[Payment]:
+    def get_trainer_payments(
+        self, trainer_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Payment]:
         """Get all payments received by a trainer."""
         return (
             self.db.query(Payment)
@@ -103,7 +120,7 @@ class PaymentService:
         return {
             "id": f"pi_test_{payment.id}",
             "client_secret": f"pi_test_{payment.id}_secret_test",
-            "status": "requires_payment_method"
+            "status": "requires_payment_method",
         }
 
 
@@ -115,20 +132,31 @@ class SubscriptionService:
         return self.db.query(Subscription).filter(Subscription.id == id).first()
 
     def get_by_stripe_id(self, stripe_subscription_id: str) -> Optional[Subscription]:
-        return self.db.query(Subscription).filter(
-            Subscription.stripe_subscription_id == stripe_subscription_id
-        ).first()
+        return (
+            self.db.query(Subscription)
+            .filter(Subscription.stripe_subscription_id == stripe_subscription_id)
+            .first()
+        )
 
     def get_multi(
-        self, *, skip: int = 0, limit: int = 100, client_id: Optional[int] = None, 
-        trainer_id: Optional[int] = None
+        self,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        client_id: Optional[int] = None,
+        trainer_id: Optional[int] = None,
     ) -> List[Subscription]:
         query = self.db.query(Subscription)
         if client_id:
             query = query.filter(Subscription.client_id == client_id)
         if trainer_id:
             query = query.filter(Subscription.trainer_id == trainer_id)
-        return query.order_by(Subscription.created_at.desc()).offset(skip).limit(limit).all()
+        return (
+            query.order_by(Subscription.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def create(self, obj_in: SubscriptionCreate) -> Subscription:
         obj_in_data = obj_in.dict()
@@ -145,10 +173,10 @@ class SubscriptionService:
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-        
+
         self.db.add(db_obj)
         self.db.commit()
         self.db.refresh(db_obj)
@@ -168,10 +196,11 @@ class SubscriptionService:
         """Get active subscriptions for a client."""
         return (
             self.db.query(Subscription)
-            .filter(and_(
-                Subscription.client_id == client_id,
-                Subscription.status == "active"
-            ))
+            .filter(
+                and_(
+                    Subscription.client_id == client_id, Subscription.status == "active"
+                )
+            )
             .all()
         )
 
@@ -187,10 +216,12 @@ class PaymentMethodService:
         """Get all payment methods for a client."""
         return (
             self.db.query(PaymentMethod)
-            .filter(and_(
-                PaymentMethod.client_id == client_id,
-                PaymentMethod.is_active == True
-            ))
+            .filter(
+                and_(
+                    PaymentMethod.client_id == client_id,
+                    PaymentMethod.is_active == True,
+                )
+            )
             .all()
         )
 
@@ -198,27 +229,33 @@ class PaymentMethodService:
         """Get the default payment method for a client."""
         return (
             self.db.query(PaymentMethod)
-            .filter(and_(
-                PaymentMethod.client_id == client_id,
-                PaymentMethod.is_default == True,
-                PaymentMethod.is_active == True
-            ))
+            .filter(
+                and_(
+                    PaymentMethod.client_id == client_id,
+                    PaymentMethod.is_default == True,
+                    PaymentMethod.is_active == True,
+                )
+            )
             .first()
         )
 
-    def set_default_payment_method(self, payment_method_id: int, client_id: int) -> PaymentMethod:
+    def set_default_payment_method(
+        self, payment_method_id: int, client_id: int
+    ) -> PaymentMethod:
         """Set a payment method as default for a client."""
         # First, unset all other payment methods as default
-        self.db.query(PaymentMethod).filter(and_(
-            PaymentMethod.client_id == client_id,
-            PaymentMethod.id != payment_method_id
-        )).update({"is_default": False})
-        
+        self.db.query(PaymentMethod).filter(
+            and_(
+                PaymentMethod.client_id == client_id,
+                PaymentMethod.id != payment_method_id,
+            )
+        ).update({"is_default": False})
+
         # Set the new default
         payment_method = self.get(payment_method_id)
         if payment_method:
             payment_method.is_default = True
             self.db.commit()
             self.db.refresh(payment_method)
-        
+
         return payment_method

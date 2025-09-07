@@ -2,10 +2,10 @@
 Payment schemas.
 """
 
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from app.models.payment import PaymentStatus, SubscriptionStatus
 
@@ -16,15 +16,17 @@ class PaymentBase(BaseModel):
     description: Optional[str] = None
     payment_method: Optional[str] = None
 
-    @validator('amount')
+    @field_validator("amount")
+    @classmethod
     def validate_amount(cls, v):
         if v <= 0:
-            raise ValueError('amount must be positive')
+            raise ValueError("amount must be positive")
         return v
 
-    @validator('currency')
+    @field_validator("currency")
+    @classmethod
     def validate_currency(cls, v):
-        valid_currencies = ['USD', 'EUR', 'GBP', 'CAD']
+        valid_currencies = ["USD", "EUR", "GBP", "CAD"]
         if v and v.upper() not in valid_currencies:
             raise ValueError(f'currency must be one of: {", ".join(valid_currencies)}')
         return v.upper() if v else v
@@ -83,9 +85,10 @@ class SubscriptionBase(BaseModel):
     currency: Optional[str] = "USD"
     billing_cycle: str
 
-    @validator('billing_cycle')
+    @field_validator("billing_cycle")
+    @classmethod
     def validate_billing_cycle(cls, v):
-        valid_cycles = ['weekly', 'monthly', 'yearly']
+        valid_cycles = ["weekly", "monthly", "yearly"]
         if v.lower() not in valid_cycles:
             raise ValueError(f'billing_cycle must be one of: {", ".join(valid_cycles)}')
         return v.lower()
@@ -140,9 +143,10 @@ class PaymentMethodBase(BaseModel):
     type: str
     is_default: Optional[bool] = False
 
-    @validator('type')
+    @field_validator("type")
+    @classmethod
     def validate_type(cls, v):
-        valid_types = ['card', 'bank_account', 'paypal']
+        valid_types = ["card", "bank_account", "paypal"]
         if v.lower() not in valid_types:
             raise ValueError(f'type must be one of: {", ".join(valid_types)}')
         return v.lower()

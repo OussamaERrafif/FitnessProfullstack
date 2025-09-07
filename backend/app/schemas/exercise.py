@@ -2,10 +2,10 @@
 Exercise schemas.
 """
 
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from app.models.exercise import DifficultyLevel, EquipmentType
 
@@ -24,9 +24,17 @@ class ExerciseBase(BaseModel):
     calories_per_minute: Optional[int] = None
     is_active: Optional[bool] = True
 
-    @validator('category')
+    @field_validator("category")
+    @classmethod
     def validate_category(cls, v):
-        valid_categories = ['strength', 'cardio', 'flexibility', 'balance', 'sports', 'functional']
+        valid_categories = [
+            "strength",
+            "cardio",
+            "flexibility",
+            "balance",
+            "sports",
+            "functional",
+        ]
         if v and v.lower() not in valid_categories:
             raise ValueError(f'category must be one of: {", ".join(valid_categories)}')
         return v.lower() if v else v
