@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Mock database - in a real app, this would be stored in an actual database
-let mockClients = [
+const mockClients = [
   { id: "1", name: "Sarah Johnson", email: "sarah.j@email.com", pin: "123456", phone: "+1 (555) 123-4567", age: 28, weight: 68.2, height: 165, goals: "Weight loss and strength building", healthData: "No major health issues", fitnessLevel: "intermediate", createdAt: new Date("2025-01-15") },
   { id: "2", name: "Mike Chen", email: "mike.chen@email.com", pin: "654321", phone: "+1 (555) 234-5678", age: 35, weight: 82.1, height: 178, goals: "Lose 10kg and build lean muscle", healthData: "Mild knee pain from old injury", fitnessLevel: "beginner", createdAt: new Date("2024-12-10") },
   { id: "3", name: "Emily Davis", email: "emily.d@email.com", pin: "111222", phone: "+1 (555) 345-6789", age: 26, weight: 65.0, height: 160, goals: "Improve cardiovascular endurance", healthData: "Asthma - needs inhaler during intense workouts", fitnessLevel: "intermediate", createdAt: new Date("2025-02-01") },

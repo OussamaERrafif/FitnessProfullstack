@@ -18,17 +18,23 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
     
     # CORS origins
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
     ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
 
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @field_validator("ALLOWED_HOSTS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
+    def assemble_allowed_hosts(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str) and v:
             return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
+        elif isinstance(v, list):
             return v
-        raise ValueError(v)
+        return ["localhost", "127.0.0.1"]
+
+    def get_cors_origins(self) -> List[str]:
+        """Get CORS origins as a list."""
+        if isinstance(self.BACKEND_CORS_ORIGINS, str):
+            return [i.strip() for i in self.BACKEND_CORS_ORIGINS.split(",")]
+        return self.BACKEND_CORS_ORIGINS
 
     # Database settings
     POSTGRES_SERVER: str = "localhost"
