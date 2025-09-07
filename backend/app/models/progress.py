@@ -151,5 +151,5 @@ class Goal(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
-    client = relationship("Client", backref="goals")
-    trainer = relationship("Trainer", backref="client_goals")
+    client = relationship("Client", backref="client_goals")
+    trainer = relationship("Trainer", backref="trainer_goals")

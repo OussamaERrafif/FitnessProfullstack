@@ -27,7 +27,8 @@ class UserService:
             email=user_in.email,
             hashed_password=hashed_password,
             full_name=user_in.full_name,
-            is_superuser=user_in.is_superuser,
+            is_superuser=getattr(user_in, 'is_superuser', False),
+            is_trainer=getattr(user_in, 'is_trainer', False),
         )
         self.db.add(db_user)
         self.db.commit()
