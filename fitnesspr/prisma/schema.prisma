@@ -1,0 +1,209 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(TRAINER)
+  subscription  String?   @default("free")
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Trainer-specific fields
+  clients       User[]    @relation("TrainerToClient")
+  sessions_created Session_Booking[] @relation("TrainerSessions")
+  payments_received Payment[]
+  
+  // Client-specific fields
+  trainer       User?     @relation("TrainerToClient", fields: [trainerId], references: [id])
+  trainerId     String?
+  pin           String?   @unique
+  age           Int?
+  weight        Float?
+  height        Float?
+  goals         String?
+  health_data   String?   // JSON string for additional health data
+  training_plans TrainingPlan[]
+  meal_plans    MealPlan[]
+  progress_logs ProgressLog[]
+  sessions_booked Session_Booking[] @relation("ClientSessions")
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model TrainingPlan {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  exercises   String // JSON string for exercises data
+  schedule    String // JSON string for schedule data
+  
+  client      User?   @relation(fields: [clientId], references: [id])
+  clientId    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MealPlan {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  recipes     String // JSON string for recipes data
+  schedule    String // JSON string for schedule data
+  
+  client      User?   @relation(fields: [clientId], references: [id])
+  clientId    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Exercise {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  muscle_groups String // JSON array
+  instructions String
+  image_url   String?
+  video_url   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Recipe {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  ingredients String // JSON array
+  instructions String
+  nutrition   String // JSON object
+  image_url   String?
+  category    String?
+  diet_tags   String? // JSON array
+  prep_time   Int?
+  cook_time   Int?
+  servings    Int?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Session_Booking {
+  id          String @id @default(cuid())
+  date        DateTime
+  duration    Int // minutes
+  type        SessionType
+  status      SessionStatus @default(SCHEDULED)
+  notes       String?
+  
+  trainer     User   @relation("TrainerSessions", fields: [trainerId], references: [id])
+  trainerId   String
+  
+  client      User?  @relation("ClientSessions", fields: [clientId], references: [id])
+  clientId    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProgressLog {
+  id        String @id @default(cuid())
+  date      DateTime
+  weight    Float?
+  body_fat  Float?
+  muscle_mass Float?
+  notes     String?
+  measurements String? // JSON object for various measurements
+  photos    String? // JSON array of photo URLs
+  
+  client    User?   @relation(fields: [clientId], references: [id])
+  clientId  String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id          String @id @default(cuid())
+  amount      Float
+  currency    String @default("USD")
+  status      PaymentStatus
+  stripe_payment_intent_id String?
+  description String?
+  
+  trainer     User   @relation(fields: [trainerId], references: [id])
+  trainerId   String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum UserRole {
+  TRAINER
+  CLIENT
+  ADMIN
+}
+
+enum SessionType {
+  PERSONAL_TRAINING
+  GROUP_CLASS
+  CONSULTATION
+  VIRTUAL
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
