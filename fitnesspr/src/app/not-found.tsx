@@ -48,7 +48,7 @@ export default function NotFound() {
                   → Training Programs
                 </Link>
                 <Link 
-                  href="/client/pin-login" 
+                  href="/login" 
                   className="block text-blue-600 hover:text-blue-800 transition-colors"
                 >
                   → Client Login

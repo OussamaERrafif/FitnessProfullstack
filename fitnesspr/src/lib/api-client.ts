@@ -32,10 +32,15 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+  const defaultHeaders: Record<string, string> = {};
+  
+  // Only set JSON headers if we're not sending FormData
+  if (!(options.body instanceof FormData)) {
+    defaultHeaders['Content-Type'] = 'application/json';
+    defaultHeaders['Accept'] = 'application/json';
+  } else {
+    defaultHeaders['Accept'] = 'application/json';
+  }
 
   const config: RequestInit = {
     headers: {

@@ -76,7 +76,7 @@ export default function ClientError({ error, reset }: ErrorProps) {
                 variant="outline"
                 className="w-full"
               >
-                <Link href="/client/pin-login">
+                <Link href="/login">
                   <Home className="w-4 h-4 mr-2" />
                   Back to login
                 </Link>

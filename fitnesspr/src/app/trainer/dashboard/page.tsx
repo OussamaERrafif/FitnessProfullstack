@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Users, Calendar, DollarSign, TrendingUp, Plus, Loader2 } from "lucide-react"
@@ -15,6 +16,7 @@ export default function TrainerDashboard() {
   const [recentProgress, setRecentProgress] = useState<ClientProgress[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>("")
+  const router = useRouter()
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -24,7 +26,19 @@ export default function TrainerDashboard() {
 
         // Check if user is authenticated
         if (!authService.isAuthenticated()) {
-          setError("Please log in to view dashboard")
+          router.push('/login')
+          return
+        }
+
+        // Verify user is a trainer
+        try {
+          const user = await authService.getCurrentUser()
+          if (user.role !== 'TRAINER') {
+            router.push('/login')
+            return
+          }
+        } catch (err) {
+          router.push('/login')
           return
         }
 
