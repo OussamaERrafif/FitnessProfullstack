@@ -37,7 +37,7 @@ export default function TrainerDashboard() {
             router.push('/login')
             return
           }
-        } catch (err) {
+        } catch {
           router.push('/login')
           return
         }

@@ -49,16 +49,6 @@ export interface Program {
   created_at: string;
   updated_at: string;
   exercises?: ProgramExercise[];
-  client_id: string;
-  trainer_id: string;
-  duration_weeks?: number;
-  sessions_per_week?: number;
-  difficulty_level?: string;
-  goals?: string;
-  is_active: boolean;
-  exercises: ProgramExercise[];
-  created_at: string;
-  updated_at: string;
 }
 
 export interface CreateProgramRequest {
@@ -70,11 +60,6 @@ export interface CreateProgramRequest {
   category: string;
   goals?: string;
   client_id?: string;
-  client_id: string;
-  duration_weeks?: number;
-  sessions_per_week?: number;
-  difficulty_level?: string;
-  goals?: string;
   exercises?: {
     exercise_id: string;
     sets?: number;
@@ -125,6 +110,20 @@ export const programsService = {
       
       const response = await apiRequest<ProgramListResponse>(
         url,
+        {
+          method: 'GET',
+          headers: authService.getAuthHeaders(),
+        }
+      );
+      
+      return response;
+    } catch (error) {
+      console.error('Failed to fetch programs:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Get all programs for a client
    */
   async getClientPrograms(clientId: string): Promise<Program[]> {
@@ -276,28 +275,6 @@ export const programsService = {
       );
     } catch (error) {
       console.error(`Failed to remove exercise ${exerciseId} from program ${programId}:`, error);
-
-      throw error;
-    }
-  },
-
-  /**
-   * Get programs for a specific client
-   */
-  async getClientPrograms(clientId: string): Promise<ProgramListResponse> {
-    try {
-      const response = await apiRequest<ProgramListResponse>(
-        `${API_ENDPOINTS.programs.list()}/client/${clientId}`,
-
-        {
-          method: 'GET',
-          headers: authService.getAuthHeaders(),
-        }
-      );
-      
-      return response;
-    } catch (error) {
-      console.error(`Failed to fetch programs for client ${clientId}:`, error);
 
       throw error;
     }

@@ -59,22 +59,22 @@ from app.schemas.program import ProgramCreate, ProgramUpdate
 class ProgramService:
     """
     Service class for managing workout programs and exercise assignments.
-    
+
     Provides comprehensive program management including creation, updates, exercise
     configuration, and client assignment. Supports complex workout structures with
     detailed exercise parameters and progression tracking.
-    
+
     Attributes:
         db (Session): SQLAlchemy database session for data operations
-        
+
     Example:
         Creating and managing programs::
-        
+
             program_service = ProgramService(db)
-            
+
             # Create a program with exercises
             program = program_service.create(program_data, trainer_id=1)
-            
+
             # Add exercise to existing program
             exercise_data = {
                 "exercise_id": 15,
@@ -84,15 +84,15 @@ class ProgramService:
                 "rest_seconds": 120
             }
             program_service.add_exercise(program.id, exercise_data)
-            
+
             # Get client's programs
             programs = program_service.get_client_programs(client_id=123)
     """
-    
+
     def __init__(self, db: Session):
         """
         Initialize program service with database session.
-        
+
         Args:
             db (Session): SQLAlchemy database session for data persistence
         """
@@ -101,13 +101,13 @@ class ProgramService:
     def get(self, id: int) -> Optional[Program]:
         """
         Retrieve a single program by ID.
-        
+
         Args:
             id (int): Unique identifier of the program
-            
+
         Returns:
             Optional[Program]: Program object if found, None otherwise
-            
+
         Example:
             >>> program = program_service.get(123)
             >>> if program:
@@ -125,26 +125,26 @@ class ProgramService:
     ) -> List[Program]:
         """
         Retrieve multiple programs with filtering and pagination.
-        
+
         Supports comprehensive filtering by trainer and client with built-in
         pagination for efficient data retrieval.
-        
+
         Args:
             skip (int, optional): Number of records to skip for pagination. Defaults to 0.
             limit (int, optional): Maximum number of records to return. Defaults to 100.
             trainer_id (Optional[int], optional): Filter by trainer ID for trainer-created programs
             client_id (Optional[int], optional): Filter by client ID for client-assigned programs
-            
+
         Returns:
             List[Program]: List of program objects matching the filters
-            
+
         Example:
             >>> # Get trainer's programs
             >>> trainer_programs = program_service.get_multi(
             ...     trainer_id=1,
             ...     limit=50
             ... )
-            >>> 
+            >>>
             >>> # Get client's assigned programs
             >>> client_programs = program_service.get_multi(
             ...     client_id=123,
@@ -162,21 +162,21 @@ class ProgramService:
     def create(self, obj_in: ProgramCreate, trainer_id: int) -> Program:
         """
         Create a new workout program with exercises.
-        
+
         Creates a comprehensive workout program with exercise assignments, sets/reps
         configuration, and client association. Supports complex program structures
         with multiple exercises and detailed parameters.
-        
+
         Args:
             obj_in (ProgramCreate): Program creation schema with exercise data
             trainer_id (int): ID of the trainer creating the program
-            
+
         Returns:
             Program: Created program object with associated exercises
-            
+
         Raises:
             ValueError: If program data is invalid or exercises are malformed
-            
+
         Example:
             >>> program_data = ProgramCreate(
             ...     name="Upper Body Strength",
@@ -216,17 +216,17 @@ class ProgramService:
     ) -> Program:
         """
         Update an existing program with new information.
-        
+
         Supports partial updates while maintaining data integrity and exercise
         associations. Preserves trainer ownership and client assignments.
-        
+
         Args:
             db_obj (Program): Existing program object to update
             obj_in (Union[ProgramUpdate, Dict[str, Any]]): Update data schema or dictionary
-            
+
         Returns:
             Program: Updated program object with refreshed data
-            
+
         Example:
             >>> # Update program duration and difficulty
             >>> update_data = ProgramUpdate(
@@ -252,16 +252,16 @@ class ProgramService:
     def remove(self, id: int) -> Program:
         """
         Remove a program and its associated exercises.
-        
+
         Permanently deletes a program and all its exercise associations. Use with
         caution as this operation cannot be undone.
-        
+
         Args:
             id (int): ID of the program to remove
-            
+
         Returns:
             Program: The deleted program object
-            
+
         Warning:
             This operation permanently deletes the program and all exercise associations.
             Consider using soft delete (is_active=False) for better data integrity.
@@ -276,16 +276,16 @@ class ProgramService:
     def get_with_exercises(self, id: int) -> Optional[Program]:
         """
         Get program with its exercises included.
-        
+
         Retrieves a program with full exercise details including sets, reps,
         weights, and exercise order for complete program visualization.
-        
+
         Args:
             id (int): ID of the program to retrieve
-            
+
         Returns:
             Optional[Program]: Program object with exercise relationships loaded
-            
+
         Example:
             >>> program = program_service.get_with_exercises(123)
             >>> if program:
@@ -297,17 +297,17 @@ class ProgramService:
     def add_exercise(self, program_id: int, exercise_data: dict) -> ProgramExercise:
         """
         Add an exercise to an existing program.
-        
+
         Dynamically adds exercises to programs, supporting flexible program
         modifications and exercise progression adjustments.
-        
+
         Args:
             program_id (int): ID of the program to modify
             exercise_data (dict): Exercise data including sets, reps, weight, and order
-            
+
         Returns:
             ProgramExercise: Created program exercise association object
-            
+
         Example:
             >>> # Add a new exercise to existing program
             >>> exercise_data = {
@@ -329,14 +329,14 @@ class ProgramService:
     def remove_exercise(self, program_id: int, exercise_id: int) -> bool:
         """
         Remove a specific exercise from a program.
-        
+
         Args:
             program_id (int): ID of the program
             exercise_id (int): ID of the exercise to remove
-            
+
         Returns:
             bool: True if exercise was removed, False if not found
-            
+
         Example:
             >>> success = program_service.remove_exercise(program_id=123, exercise_id=456)
             >>> if success:
@@ -363,17 +363,17 @@ class ProgramService:
     ) -> Optional[ProgramExercise]:
         """
         Update a program exercise configuration.
-        
+
         Modifies exercise parameters within a program such as sets, reps, weight,
         and rest periods to support program progression.
-        
+
         Args:
             program_exercise_id (int): ID of the program exercise association
             update_data (dict): Updated exercise parameters
-            
+
         Returns:
             Optional[ProgramExercise]: Updated program exercise object
-            
+
         Example:
             >>> # Increase weight and adjust reps for progression
             >>> update_data = {
@@ -394,16 +394,16 @@ class ProgramService:
     def get_client_programs(self, client_id: int) -> List[Program]:
         """
         Get all active programs assigned to a specific client.
-        
+
         Retrieves all programs currently assigned to a client, including both
         active and scheduled programs for comprehensive client program management.
-        
+
         Args:
             client_id (int): ID of the client
-            
+
         Returns:
             List[Program]: List of client-assigned program objects
-            
+
         Example:
             >>> client_programs = program_service.get_client_programs(client_id=123)
             >>> for program in client_programs:
@@ -420,17 +420,17 @@ class ProgramService:
     ) -> int:
         """
         Count programs matching the specified filters.
-        
+
         Provides efficient counting for pagination and statistics without
         retrieving the full program objects.
-        
+
         Args:
             trainer_id (Optional[int], optional): Filter by trainer ID
             client_id (Optional[int], optional): Filter by client ID
-            
+
         Returns:
             int: Number of programs matching the filters
-            
+
         Example:
             >>> trainer_program_count = program_service.count(trainer_id=1)
             >>> client_program_count = program_service.count(client_id=123)

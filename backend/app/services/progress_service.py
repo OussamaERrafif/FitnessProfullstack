@@ -73,19 +73,19 @@ from app.schemas.progress import (
 class ProgressService:
     """
     Service class for managing client progress tracking and body measurements.
-    
+
     Provides comprehensive progress monitoring including body composition tracking,
     measurements logging, and progress trend analysis. Supports both trainer-logged
     and client self-reported progress data with detailed historical tracking.
-    
+
     Attributes:
         db (Session): SQLAlchemy database session for data operations
-        
+
     Example:
         Creating and tracking progress::
-        
+
             progress_service = ProgressService(db)
-            
+
             # Log progress entry
             progress_data = ProgressCreate(
                 client_id=123,
@@ -96,15 +96,15 @@ class ProgressService:
                 chest_circumference=42.5
             )
             progress = progress_service.create(progress_data, trainer_id=1)
-            
+
             # Get progress trend
             recent_progress = progress_service.get_client_progress(client_id=123, limit=10)
     """
-    
+
     def __init__(self, db: Session):
         """
         Initialize progress service with database session.
-        
+
         Args:
             db (Session): SQLAlchemy database session for data persistence
         """
@@ -113,10 +113,10 @@ class ProgressService:
     def get(self, id: int) -> Optional[Progress]:
         """
         Retrieve a single progress entry by ID.
-        
+
         Args:
             id (int): Unique identifier of the progress entry
-            
+
         Returns:
             Optional[Progress]: Progress object if found, None otherwise
         """
@@ -132,26 +132,26 @@ class ProgressService:
     ) -> List[Progress]:
         """
         Retrieve multiple progress entries with filtering and pagination.
-        
+
         Returns progress entries ordered by date (most recent first) with
         comprehensive filtering options for trainers and clients.
-        
+
         Args:
             skip (int, optional): Number of records to skip for pagination. Defaults to 0.
             limit (int, optional): Maximum number of records to return. Defaults to 100.
             client_id (Optional[int], optional): Filter by client ID for client-specific progress
             trainer_id (Optional[int], optional): Filter by trainer ID for trainer's clients
-            
+
         Returns:
             List[Progress]: List of progress objects ordered by date (newest first)
-            
+
         Example:
             >>> # Get recent progress for client
             >>> recent_progress = progress_service.get_multi(
             ...     client_id=123,
             ...     limit=20
             ... )
-            >>> 
+            >>>
             >>> # Get all progress logged by trainer
             >>> trainer_logged = progress_service.get_multi(
             ...     trainer_id=1,
@@ -168,17 +168,17 @@ class ProgressService:
     def create(self, obj_in: ProgressCreate, trainer_id: int) -> Progress:
         """
         Create a new progress entry with body measurements and notes.
-        
+
         Logs comprehensive progress data including body composition, measurements,
         and qualitative observations. Automatically timestamps the entry.
-        
+
         Args:
             obj_in (ProgressCreate): Progress creation schema with measurement data
             trainer_id (int): ID of the trainer logging the progress
-            
+
         Returns:
             Progress: Created progress object with assigned ID and timestamp
-            
+
         Example:
             >>> progress_data = ProgressCreate(
             ...     client_id=123,
@@ -208,14 +208,14 @@ class ProgressService:
     ) -> Progress:
         """
         Update an existing progress entry.
-        
+
         Supports partial updates while maintaining data integrity and historical
         accuracy. Preserves trainer association and timestamp information.
-        
+
         Args:
             db_obj (Progress): Existing progress object to update
             obj_in (Union[ProgressUpdate, Dict[str, Any]]): Update data schema or dictionary
-            
+
         Returns:
             Progress: Updated progress object with refreshed data
         """
@@ -235,10 +235,10 @@ class ProgressService:
     def remove(self, id: int) -> Progress:
         """
         Remove a progress entry from the database.
-        
+
         Args:
             id (int): ID of the progress entry to remove
-            
+
         Returns:
             Progress: The deleted progress object
         """
@@ -252,18 +252,18 @@ class ProgressService:
     ) -> List[Progress]:
         """
         Get progress entries for a specific client.
-        
+
         Retrieves all progress data for a client ordered chronologically
         for trend analysis and progress visualization.
-        
+
         Args:
             client_id (int): ID of the client
             skip (int, optional): Pagination offset. Defaults to 0.
             limit (int, optional): Maximum results to return. Defaults to 100.
-            
+
         Returns:
             List[Progress]: List of client progress entries ordered by date
-            
+
         Example:
             >>> client_progress = progress_service.get_client_progress(client_id=123)
             >>> weight_trend = [p.weight for p in client_progress if p.weight]
@@ -281,15 +281,15 @@ class ProgressService:
     def get_latest_progress(self, client_id: int) -> Optional[Progress]:
         """
         Get the most recent progress entry for a client.
-        
+
         Useful for displaying current measurements and tracking recent changes.
-        
+
         Args:
             client_id (int): ID of the client
-            
+
         Returns:
             Optional[Progress]: Most recent progress entry if found
-            
+
         Example:
             >>> latest = progress_service.get_latest_progress(client_id=123)
             >>> if latest:
@@ -308,18 +308,18 @@ class ProgressService:
     ) -> List[Progress]:
         """
         Get progress entries within a specific date range.
-        
+
         Enables targeted progress analysis for specific time periods,
         useful for monthly reports and progress comparisons.
-        
+
         Args:
             client_id (int): ID of the client
             start_date (datetime): Start of the date range
             end_date (datetime): End of the date range
-            
+
         Returns:
             List[Progress]: Progress entries within the date range
-            
+
         Example:
             >>> # Get last 30 days of progress
             >>> end_date = datetime.now()
@@ -348,11 +348,11 @@ class ProgressService:
     ) -> int:
         """
         Count progress entries matching the specified filters.
-        
+
         Args:
             client_id (Optional[int], optional): Filter by client ID
             trainer_id (Optional[int], optional): Filter by trainer ID
-            
+
         Returns:
             int: Number of progress entries matching the filters
         """
@@ -367,19 +367,19 @@ class ProgressService:
 class WorkoutLogService:
     """
     Service class for managing detailed workout logging and exercise tracking.
-    
+
     Provides comprehensive workout session recording including exercise performance,
     duration tracking, and completion status. Supports detailed exercise logs with
     sets, reps, weights, and performance metrics.
-    
+
     Attributes:
         db (Session): SQLAlchemy database session for data operations
-        
+
     Example:
         Logging workouts and exercises::
-        
+
             workout_service = WorkoutLogService(db)
-            
+
             # Log a complete workout
             workout_data = WorkoutLogCreate(
                 client_id=123,
@@ -392,15 +392,15 @@ class WorkoutLogService:
                 ]
             )
             workout = workout_service.create(workout_data, trainer_id=1)
-            
+
             # Get workout statistics
             stats = workout_service.get_workout_stats(client_id=123, days=30)
     """
-    
+
     def __init__(self, db: Session):
         """
         Initialize workout log service with database session.
-        
+
         Args:
             db (Session): SQLAlchemy database session for data persistence
         """
@@ -409,10 +409,10 @@ class WorkoutLogService:
     def get(self, id: int) -> Optional[WorkoutLog]:
         """
         Retrieve a single workout log by ID.
-        
+
         Args:
             id (int): Unique identifier of the workout log
-            
+
         Returns:
             Optional[WorkoutLog]: Workout log object if found, None otherwise
         """
@@ -428,13 +428,13 @@ class WorkoutLogService:
     ) -> List[WorkoutLog]:
         """
         Retrieve multiple workout logs with filtering and pagination.
-        
+
         Args:
             skip (int, optional): Number of records to skip. Defaults to 0.
             limit (int, optional): Maximum records to return. Defaults to 100.
             client_id (Optional[int], optional): Filter by client ID
             trainer_id (Optional[int], optional): Filter by trainer ID
-            
+
         Returns:
             List[WorkoutLog]: List of workout logs ordered by date (newest first)
         """
@@ -448,17 +448,17 @@ class WorkoutLogService:
     def create(self, obj_in: WorkoutLogCreate, trainer_id: int) -> WorkoutLog:
         """
         Create a comprehensive workout log with exercise details.
-        
+
         Creates a detailed workout session record including duration, calories,
         and individual exercise performance data with sets, reps, and weights.
-        
+
         Args:
             obj_in (WorkoutLogCreate): Workout creation schema with exercise logs
             trainer_id (int): ID of the trainer logging the workout
-            
+
         Returns:
             WorkoutLog: Created workout log with associated exercise logs
-            
+
         Example:
             >>> workout_data = WorkoutLogCreate(
             ...     client_id=123,
@@ -497,11 +497,11 @@ class WorkoutLogService:
     ) -> WorkoutLog:
         """
         Update an existing workout log.
-        
+
         Args:
             db_obj (WorkoutLog): Existing workout log to update
             obj_in (Union[WorkoutLogUpdate, Dict[str, Any]]): Update data
-            
+
         Returns:
             WorkoutLog: Updated workout log object
         """
@@ -521,10 +521,10 @@ class WorkoutLogService:
     def remove(self, id: int) -> WorkoutLog:
         """
         Remove a workout log and its associated exercise logs.
-        
+
         Args:
             id (int): ID of the workout log to remove
-            
+
         Returns:
             WorkoutLog: The deleted workout log object
         """
@@ -540,15 +540,15 @@ class WorkoutLogService:
     ) -> List[WorkoutLog]:
         """
         Get workout logs for a specific client.
-        
+
         Retrieves all workout sessions for a client ordered chronologically
         for progress tracking and workout frequency analysis.
-        
+
         Args:
             client_id (int): ID of the client
             skip (int, optional): Pagination offset. Defaults to 0.
             limit (int, optional): Maximum results to return. Defaults to 100.
-            
+
         Returns:
             List[WorkoutLog]: List of client workout logs ordered by date
         """
@@ -564,14 +564,14 @@ class WorkoutLogService:
     def get_workout_stats(self, client_id: int, days: int = 30) -> Dict[str, Any]:
         """
         Get comprehensive workout statistics for a client over a specified period.
-        
+
         Calculates detailed workout metrics including frequency, duration,
         calories burned, and performance trends for progress assessment.
-        
+
         Args:
             client_id (int): ID of the client
             days (int, optional): Number of days to analyze. Defaults to 30.
-            
+
         Returns:
             Dict[str, Any]: Comprehensive workout statistics including:
                 - total_workouts: Number of completed workouts
@@ -579,7 +579,7 @@ class WorkoutLogService:
                 - total_calories_burned: Total calories burned
                 - average_duration: Average workout duration
                 - workouts_per_week: Weekly workout frequency
-                
+
         Example:
             >>> stats = workout_service.get_workout_stats(client_id=123, days=30)
             >>> print(f"Workouts: {stats['total_workouts']}")
@@ -618,19 +618,19 @@ class WorkoutLogService:
 class GoalService:
     """
     Service class for managing fitness goals and achievement tracking.
-    
+
     Provides comprehensive goal management including creation, progress tracking,
     achievement monitoring, and deadline management. Supports both quantitative
     and qualitative goals with flexible target setting and progress measurement.
-    
+
     Attributes:
         db (Session): SQLAlchemy database session for data operations
-        
+
     Example:
         Creating and managing goals::
-        
+
             goal_service = GoalService(db)
-            
+
             # Create a weight loss goal
             goal_data = GoalCreate(
                 client_id=123,
@@ -642,15 +642,15 @@ class GoalService:
                 target_date=datetime.now() + timedelta(days=90)
             )
             goal = goal_service.create(goal_data, trainer_id=1)
-            
+
             # Mark goal as achieved
             goal_service.mark_goal_achieved(goal.id)
     """
-    
+
     def __init__(self, db: Session):
         """
         Initialize goal service with database session.
-        
+
         Args:
             db (Session): SQLAlchemy database session for data persistence
         """
@@ -659,10 +659,10 @@ class GoalService:
     def get(self, id: int) -> Optional[Goal]:
         """
         Retrieve a single goal by ID.
-        
+
         Args:
             id (int): Unique identifier of the goal
-            
+
         Returns:
             Optional[Goal]: Goal object if found, None otherwise
         """
@@ -679,14 +679,14 @@ class GoalService:
     ) -> List[Goal]:
         """
         Retrieve multiple goals with filtering and pagination.
-        
+
         Args:
             skip (int, optional): Number of records to skip. Defaults to 0.
             limit (int, optional): Maximum records to return. Defaults to 100.
             client_id (Optional[int], optional): Filter by client ID
             trainer_id (Optional[int], optional): Filter by trainer ID
             is_active (Optional[bool], optional): Filter by active status
-            
+
         Returns:
             List[Goal]: List of goals ordered by target date
         """
@@ -702,17 +702,17 @@ class GoalService:
     def create(self, obj_in: GoalCreate, trainer_id: int) -> Goal:
         """
         Create a new fitness goal with target metrics and deadlines.
-        
+
         Creates a comprehensive goal with measurable targets, deadlines,
         and progress tracking capabilities for client motivation and accountability.
-        
+
         Args:
             obj_in (GoalCreate): Goal creation schema with target specifications
             trainer_id (int): ID of the trainer setting the goal
-            
+
         Returns:
             Goal: Created goal object with assigned ID and tracking setup
-            
+
         Example:
             >>> goal_data = GoalCreate(
             ...     client_id=123,
@@ -738,11 +738,11 @@ class GoalService:
     def update(self, db_obj: Goal, obj_in: Union[GoalUpdate, Dict[str, Any]]) -> Goal:
         """
         Update an existing goal with new targets or status.
-        
+
         Args:
             db_obj (Goal): Existing goal object to update
             obj_in (Union[GoalUpdate, Dict[str, Any]]): Update data
-            
+
         Returns:
             Goal: Updated goal object
         """
@@ -762,10 +762,10 @@ class GoalService:
     def remove(self, id: int) -> Goal:
         """
         Remove a goal from the database.
-        
+
         Args:
             id (int): ID of the goal to remove
-            
+
         Returns:
             Goal: The deleted goal object
         """
@@ -779,22 +779,22 @@ class GoalService:
     ) -> List[Goal]:
         """
         Get goals for a specific client.
-        
+
         Retrieves all goals assigned to a client, optionally filtered
         by active status for current goal management.
-        
+
         Args:
             client_id (int): ID of the client
             is_active (Optional[bool], optional): Filter by active status
-            
+
         Returns:
             List[Goal]: List of client goals ordered by target date
-            
+
         Example:
             >>> # Get all active goals
             >>> active_goals = goal_service.get_client_goals(client_id=123, is_active=True)
             >>> for goal in active_goals:
-            ...     progress_pct = ((goal.target_value - goal.current_value) / 
+            ...     progress_pct = ((goal.target_value - goal.current_value) /
             ...                    (goal.target_value - goal.initial_value)) * 100
             ...     print(f"Goal: {goal.title} - {progress_pct:.1f}% complete")
         """
@@ -806,16 +806,16 @@ class GoalService:
     def mark_goal_achieved(self, goal_id: int) -> Goal:
         """
         Mark a goal as achieved and record the achievement date.
-        
+
         Updates goal status to achieved and timestamps the accomplishment
         for progress tracking and client motivation.
-        
+
         Args:
             goal_id (int): ID of the achieved goal
-            
+
         Returns:
             Goal: Updated goal object with achievement status
-            
+
         Example:
             >>> achieved_goal = goal_service.mark_goal_achieved(goal_id=456)
             >>> if achieved_goal.is_achieved:
@@ -832,16 +832,16 @@ class GoalService:
     def get_overdue_goals(self, client_id: int) -> List[Goal]:
         """
         Get goals that are overdue and not yet achieved.
-        
+
         Identifies goals that have passed their target date without
         being achieved, useful for goal reassessment and coaching.
-        
+
         Args:
             client_id (int): ID of the client
-            
+
         Returns:
             List[Goal]: List of overdue, unachieved goals
-            
+
         Example:
             >>> overdue = goal_service.get_overdue_goals(client_id=123)
             >>> if overdue:
