@@ -5,6 +5,7 @@
 import { apiRequest, API_ENDPOINTS } from './api-client';
 import { authService } from './auth-service';
 
+
 export interface Exercise {
   id: string;
   name: string;
@@ -37,6 +38,17 @@ export interface Program {
   id: string;
   name: string;
   description?: string;
+  duration_weeks: number;
+  sessions_per_week: number;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  category: string;
+  goals?: string;
+  trainer_id: string;
+  client_id?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  exercises?: ProgramExercise[];
   client_id: string;
   trainer_id: string;
   duration_weeks?: number;
@@ -52,6 +64,12 @@ export interface Program {
 export interface CreateProgramRequest {
   name: string;
   description?: string;
+  duration_weeks: number;
+  sessions_per_week: number;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  category: string;
+  goals?: string;
+  client_id?: string;
   client_id: string;
   duration_weeks?: number;
   sessions_per_week?: number;
@@ -72,10 +90,41 @@ export interface CreateProgramRequest {
 
 export interface UpdateProgramRequest extends Partial<CreateProgramRequest> {
   id: string;
+  is_active?: boolean;
+}
+
+export interface ProgramExerciseCreate {
+  exercise_id: string;
+  sets: number;
+  reps: number;
+  weight?: number;
+  duration_minutes?: number;
+  rest_seconds?: number;
+  notes?: string;
+  order_index: number;
+}
+
+export interface ProgramListResponse {
+  programs: Program[];
+  total: number;
+  page: number;
+  size: number;
+
 }
 
 export const programsService = {
   /**
+   * Get all programs for the authenticated trainer
+   */
+  async getPrograms(skip: number = 0, limit: number = 100, clientId?: string): Promise<ProgramListResponse> {
+    try {
+      let url = `${API_ENDPOINTS.programs.list()}?skip=${skip}&limit=${limit}`;
+      if (clientId) {
+        url += `&client_id=${clientId}`;
+      }
+      
+      const response = await apiRequest<ProgramListResponse>(
+        url,
    * Get all programs for a client
    */
   async getClientPrograms(clientId: string): Promise<Program[]> {
@@ -90,13 +139,15 @@ export const programsService = {
       
       return response;
     } catch (error) {
+
       console.error(`Failed to fetch programs for client ${clientId}:`, error);
       throw error;
     }
   },
 
   /**
-   * Get a specific program by ID
+   * Get a specific program by ID with exercises
+
    */
   async getProgram(id: string): Promise<Program> {
     try {
@@ -191,61 +242,53 @@ export const programsService = {
   },
 
   /**
-   * Get today's workout for a client
+   * Add exercise to program
    */
-  async getTodayWorkout(clientId: string): Promise<ProgramExercise[]> {
+  async addExerciseToProgram(programId: string, exerciseData: ProgramExerciseCreate): Promise<ProgramExercise> {
     try {
-      const currentProgram = await this.getCurrentProgram(clientId);
-      if (!currentProgram) {
-        return [];
-      }
-
-      // Get today's day of the week (1 = Monday, 7 = Sunday)
-      const today = new Date().getDay();
-      const dayNumber = today === 0 ? 7 : today; // Convert Sunday from 0 to 7
-
-      // Filter exercises for today
-      const todayExercises = currentProgram.exercises.filter(
-        exercise => exercise.day_number === dayNumber
-      );
-
-      return todayExercises.sort((a, b) => (a.order_in_program || 0) - (b.order_in_program || 0));
-    } catch (error) {
-      console.error(`Failed to fetch today's workout for client ${clientId}:`, error);
-      return [];
-    }
-  },
-
-  /**
-   * Mark exercise as completed in a workout
-   */
-  async markExerciseCompleted(
-    programId: string, 
-    exerciseId: string, 
-    completed: boolean = true
-  ): Promise<void> {
-    try {
-      await apiRequest<void>(
-        `/programs/${programId}/exercises/${exerciseId}/complete`,
+      const response = await apiRequest<ProgramExercise>(
+        `${API_ENDPOINTS.programs.get(programId)}/exercises`,
         {
           method: 'POST',
           headers: authService.getAuthHeaders(),
-          body: JSON.stringify({ completed }),
+          body: JSON.stringify(exerciseData),
         }
       );
+      
+      return response;
     } catch (error) {
-      console.error(`Failed to mark exercise ${exerciseId} as completed:`, error);
+      console.error(`Failed to add exercise to program ${programId}:`, error);
       throw error;
     }
   },
 
   /**
-   * Get exercise library
+   * Remove exercise from program
    */
-  async getExercises(): Promise<Exercise[]> {
+  async removeExerciseFromProgram(programId: string, exerciseId: string): Promise<void> {
     try {
-      const response = await apiRequest<Exercise[]>(
-        API_ENDPOINTS.exercises.list(),
+      await apiRequest<void>(
+        `${API_ENDPOINTS.programs.get(programId)}/exercises/${exerciseId}`,
+        {
+          method: 'DELETE',
+          headers: authService.getAuthHeaders(),
+        }
+      );
+    } catch (error) {
+      console.error(`Failed to remove exercise ${exerciseId} from program ${programId}:`, error);
+
+      throw error;
+    }
+  },
+
+  /**
+   * Get programs for a specific client
+   */
+  async getClientPrograms(clientId: string): Promise<ProgramListResponse> {
+    try {
+      const response = await apiRequest<ProgramListResponse>(
+        `${API_ENDPOINTS.programs.list()}/client/${clientId}`,
+
         {
           method: 'GET',
           headers: authService.getAuthHeaders(),
@@ -254,31 +297,52 @@ export const programsService = {
       
       return response;
     } catch (error) {
-      console.error('Failed to fetch exercises:', error);
+      console.error(`Failed to fetch programs for client ${clientId}:`, error);
+
       throw error;
     }
   },
 
   /**
-   * Search exercises by category or muscle group
+   * Assign program to client
    */
-  async searchExercises(query: string, category?: string): Promise<Exercise[]> {
+  async assignProgramToClient(programId: string, clientId: string): Promise<Program> {
     try {
-      const params = new URLSearchParams();
-      if (query) params.append('search', query);
-      if (category) params.append('category', category);
-
-      const response = await apiRequest<Exercise[]>(
-        `${API_ENDPOINTS.exercises.list()}?${params.toString()}`,
+      const response = await apiRequest<Program>(
+        API_ENDPOINTS.programs.update(programId),
         {
-          method: 'GET',
+          method: 'PUT',
           headers: authService.getAuthHeaders(),
+          body: JSON.stringify({ client_id: clientId }),
         }
       );
       
       return response;
     } catch (error) {
-      console.error('Failed to search exercises:', error);
+      console.error(`Failed to assign program ${programId} to client ${clientId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Toggle program active status
+   */
+  async toggleProgramStatus(programId: string, isActive: boolean): Promise<Program> {
+    try {
+      const response = await apiRequest<Program>(
+        API_ENDPOINTS.programs.update(programId),
+        {
+          method: 'PUT',
+          headers: authService.getAuthHeaders(),
+          body: JSON.stringify({ is_active: isActive }),
+
+        }
+      );
+      
+      return response;
+    } catch (error) {
+      console.error(`Failed to toggle program ${programId} status:`, error);
+
       throw error;
     }
   },

@@ -112,6 +112,10 @@ export const API_ENDPOINTS = {
     get: (id: string) => `/exercises/${id}`,
     update: (id: string) => `/exercises/${id}`,
     delete: (id: string) => `/exercises/${id}`,
+    search: () => '/exercises/search',
+    categories: () => '/exercises/categories',
+    muscleGroups: () => '/exercises/muscle-groups',
+    byCategory: (category: string) => `/exercises/category/${category}`,
   },
   
   // Programs
@@ -121,6 +125,9 @@ export const API_ENDPOINTS = {
     get: (id: string) => `/programs/${id}`,
     update: (id: string) => `/programs/${id}`,
     delete: (id: string) => `/programs/${id}`,
+    clientPrograms: (clientId: string) => `/programs/client/${clientId}`,
+    addExercise: (programId: string) => `/programs/${programId}/exercises`,
+    removeExercise: (programId: string, exerciseId: string) => `/programs/${programId}/exercises/${exerciseId}`,
   },
   
   // Meals
