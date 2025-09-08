@@ -184,7 +184,7 @@ export const clientsService = {
    * Get comprehensive client dashboard data
    */
   async getClientDashboardData(clientId: string): Promise<{
-    client: Client;
+    client: Client | null;
     trainer?: {
       id: string;
       name: string;
@@ -224,7 +224,21 @@ export const clientsService = {
       ]);
 
       // Extract successful results
-      const result = {
+      const result: {
+        client: Client | null;
+        trainer?: {
+          id: string;
+          name: string;
+          email: string;
+          specialization?: string;
+        };
+        currentProgram: any;
+        currentMealPlan: any;
+        recentProgress: any[];
+        goals: any[];
+        workoutStats: any;
+        nutritionSummary: any;
+      } = {
         client: client.status === 'fulfilled' ? client.value : null,
         currentProgram: currentProgram.status === 'fulfilled' ? currentProgram.value : null,
         currentMealPlan: currentMealPlan.status === 'fulfilled' ? currentMealPlan.value : null,

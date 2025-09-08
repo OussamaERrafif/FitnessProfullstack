@@ -180,9 +180,9 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
   const completedMeals = todayMeals.filter(meal => meal.is_completed).length
   const mealProgress = todayMeals.length > 0 ? (completedMeals / todayMeals.length) * 100 : 0
   
-  const currentWeight = recentProgress.length > 0 && recentProgress[0].measurement_type === 'weight' 
+  const currentWeight = recentProgress.length > 0 && recentProgress[0]?.measurement_type === 'weight' 
     ? recentProgress[0].value : 0
-  const prevWeight = recentProgress.length > 1 && recentProgress[1].measurement_type === 'weight' 
+  const prevWeight = recentProgress.length > 1 && recentProgress[1]?.measurement_type === 'weight' 
     ? recentProgress[1].value : currentWeight
   const weightChange = currentWeight - prevWeight
 
