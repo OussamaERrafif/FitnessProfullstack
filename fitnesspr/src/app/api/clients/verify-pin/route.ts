@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validatePin } from '@/lib/utils'
 
-// Mock client data - enhanced to represent actual database structure
+// Mock client data that matches the backend structure
 const mockClients = [
   { 
     id: "1", 
@@ -13,7 +12,9 @@ const mockClients = [
     height: 165,
     fitness_level: "intermediate",
     trainer_id: "1",
-    goals: "Weight loss and strength building"
+    goals: "Weight loss and strength building",
+    created_at: "2025-09-01T00:00:00Z",
+    updated_at: "2025-09-08T10:00:00Z"
   },
   { 
     id: "2", 
@@ -25,7 +26,9 @@ const mockClients = [
     height: 178,
     fitness_level: "advanced",
     trainer_id: "1",
-    goals: "Muscle building and cardio improvement"
+    goals: "Muscle building and cardio improvement",
+    created_at: "2025-08-15T00:00:00Z",
+    updated_at: "2025-09-08T10:00:00Z"
   },
   { 
     id: "3", 
@@ -37,7 +40,9 @@ const mockClients = [
     height: 162,
     fitness_level: "beginner", 
     trainer_id: "1",
-    goals: "General fitness and health"
+    goals: "General fitness and health",
+    created_at: "2025-08-20T00:00:00Z",
+    updated_at: "2025-09-08T10:00:00Z"
   },
   { 
     id: "4", 
@@ -49,7 +54,9 @@ const mockClients = [
     height: 180,
     fitness_level: "intermediate",
     trainer_id: "1", 
-    goals: "Weight loss and injury recovery"
+    goals: "Weight loss and injury recovery",
+    created_at: "2025-07-10T00:00:00Z",
+    updated_at: "2025-09-08T10:00:00Z"
   },
   { 
     id: "5", 
@@ -61,7 +68,9 @@ const mockClients = [
     height: 168,
     fitness_level: "advanced",
     trainer_id: "1",
-    goals: "Marathon training and endurance"
+    goals: "Marathon training and endurance",
+    created_at: "2025-06-25T00:00:00Z",
+    updated_at: "2025-09-08T10:00:00Z"
   },
 ]
 
@@ -69,47 +78,28 @@ export async function POST(request: NextRequest) {
   try {
     const { pin } = await request.json()
 
-    // Validate PIN format
-    if (!validatePin(pin)) {
+    if (!pin || pin.length !== 6) {
       return NextResponse.json(
-        { error: 'Invalid PIN format. Please enter a 6-digit PIN.' },
+        { error: 'Invalid PIN format' },
         { status: 400 }
       )
     }
 
-    // Find client by PIN
     const client = mockClients.find(c => c.pin === pin)
     
     if (!client) {
       return NextResponse.json(
-        { error: 'Invalid PIN. Please check with your trainer.' },
+        { error: 'Invalid PIN' },
         { status: 401 }
       )
     }
 
-    // Return client data structure matching backend API
-    return NextResponse.json({
-      success: true,
-      client: {
-        id: client.id,
-        name: client.name,
-        email: client.email,
-        age: client.age,
-        weight: client.weight,
-        height: client.height,
-        fitness_level: client.fitness_level,
-        trainer_id: client.trainer_id,
-        goals: client.goals,
-        created_at: "2025-09-01T00:00:00Z",
-        updated_at: new Date().toISOString()
-      },
-      redirectUrl: `/client/${pin}`
-    })
+    return NextResponse.json(client)
 
   } catch (error) {
-    console.error('PIN authentication error:', error)
+    console.error('PIN verification error:', error)
     return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
