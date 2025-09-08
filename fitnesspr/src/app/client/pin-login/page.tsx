@@ -41,7 +41,8 @@ export default function ClientPinLogin() {
       } else {
         setError(data.error || "Invalid PIN. Please check with your trainer.")
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('PIN verification error:', error)
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)

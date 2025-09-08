@@ -14,14 +14,16 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, User, Users, Activity } from 'lucide-react';
 import { authService } from '@/lib/auth-service';
 import { clientsService } from '@/lib/clients-service';
+import type { Client } from '@/lib/clients-service';
+import type { AuthUser } from '@/lib/auth-service';
 
 interface DemoState {
   isLoading: boolean;
   error?: string;
   success?: string;
   authToken?: string;
-  userData?: any;
-  clientsData?: any[];
+  userData?: AuthUser;
+  clientsData?: Client[];
 }
 
 export default function EndToEndDemo() {
@@ -54,10 +56,11 @@ export default function EndToEndDemo() {
         authToken: response.access_token,
         userData: response.user
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       updateState({ 
         isLoading: false, 
-        error: `Login failed: ${error.message || 'Unknown error'}`,
+        error: `Login failed: ${errorMessage}`,
       });
     }
   };
@@ -80,10 +83,11 @@ export default function EndToEndDemo() {
           error: `Backend test failed: ${data.message}` 
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Network error'
       updateState({ 
         isLoading: false, 
-        error: `Backend test failed: ${error.message}` 
+        error: `Backend test failed: ${errorMessage}` 
       });
     }
   };
@@ -101,10 +105,11 @@ export default function EndToEndDemo() {
         success: 'Clients loaded successfully!',
         clientsData: clients
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       updateState({ 
         isLoading: false, 
-        error: `Failed to load clients: ${error.message}. This is expected without authentication.` 
+        error: `Failed to load clients: ${errorMessage}. This is expected without authentication.` 
       });
     }
   };
@@ -131,10 +136,11 @@ export default function EndToEndDemo() {
         success: 'Test client created successfully!',
         clientsData: state.clientsData ? [...state.clientsData, client] : [client]
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       updateState({ 
         isLoading: false, 
-        error: `Failed to create client: ${error.message}. This is expected without authentication.` 
+        error: `Failed to create client: ${errorMessage}. This is expected without authentication.` 
       });
     }
   };
@@ -320,8 +326,8 @@ export default function EndToEndDemo() {
                   <div className="space-y-2">
                     {state.clientsData.map((client, index) => (
                       <div key={index} className="p-3 border rounded-lg">
-                        <p className="font-medium">{client.name}</p>
-                        <p className="text-sm text-muted-foreground">{client.email}</p>
+                        <p className="font-medium">{String(client.name || 'Unknown')}</p>
+                        <p className="text-sm text-muted-foreground">{String(client.email || 'No email')}</p>
                       </div>
                     ))}
                   </div>

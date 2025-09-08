@@ -17,7 +17,7 @@ export interface Client {
   weight?: number
   height?: number
   goals?: string
-  healthData?: any
+  healthData?: Record<string, unknown>
   trainerId: string
   trainer: Trainer
   trainingPlans: TrainingPlan[]

@@ -63,6 +63,15 @@ export function determineErrorSeverity(error: Error, context?: ErrorContext): Er
     return 'medium'
   }
   
+  // Context-specific severity adjustments
+  if (context === 'payment' && message.includes('payment')) {
+    return 'high'
+  }
+  
+  if (context === 'auth' && message.includes('unauthorized')) {
+    return 'high'
+  }
+  
   // Low severity errors that are minor inconveniences
   return 'low'
 }
@@ -92,15 +101,21 @@ export function generateErrorMetadata(
   error: Error,
   context: ErrorContext = 'global'
 ): ErrorMetadata {
-  return {
+  const metadata: ErrorMetadata = {
     context,
     severity: determineErrorSeverity(error, context),
     category: categorizeError(error, context),
     timestamp: new Date(),
-    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent : undefined,
     retryable: isRetryableError(error),
     supportContact: getSupportContact(context)
   }
+  
+  // Only add userAgent if it exists
+  if (typeof window !== 'undefined' && window.navigator?.userAgent) {
+    metadata.userAgent = window.navigator.userAgent
+  }
+  
+  return metadata
 }
 
 /**
@@ -125,17 +140,23 @@ export function getSupportContact(context: ErrorContext): string {
 export function createErrorReport(
   error: Error,
   context: ErrorContext = 'global',
-  additionalData?: Record<string, any>
+  additionalData?: Record<string, unknown>
 ): ErrorReport {
   const metadata = generateErrorMetadata(error, context)
   
-  return {
+  const report: ErrorReport = {
     error,
     metadata,
-    stackTrace: error.stack,
     breadcrumbs: getBreadcrumbs(),
     ...additionalData
   }
+  
+  // Only add stackTrace if it exists
+  if (error.stack) {
+    report.stackTrace = error.stack
+  }
+  
+  return report
 }
 
 /**

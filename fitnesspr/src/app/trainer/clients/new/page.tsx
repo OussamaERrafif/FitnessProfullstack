@@ -110,9 +110,10 @@ export default function NewClientPage() {
 
       // Optionally redirect to client details
       // router.push(`/trainer/clients/${newClient.id}?newClient=true`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create client:', err)
-      setError(err.message || "Failed to create client. Please try again.")
+      const errorMessage = err instanceof Error ? err.message : "Failed to create client. Please try again."
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }

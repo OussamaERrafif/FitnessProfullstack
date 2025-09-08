@@ -4,13 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { ZodError } from 'zod'
+import { ZodError, ZodSchema } from 'zod'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 
 export type ApiError = {
   code: string
   message: string
-  details?: any
+  details?: unknown
   statusCode: number
 }
 
@@ -18,7 +18,7 @@ export type ApiError = {
  * Custom error classes
  */
 export class ValidationError extends Error {
-  constructor(message: string, public details?: any) {
+  constructor(message: string, public details?: unknown) {
     super(message)
     this.name = 'ValidationError'
   }
@@ -238,7 +238,7 @@ function handlePrismaError(error: PrismaClientKnownRequestError): NextResponse<A
 /**
  * API route wrapper with error handling
  */
-export function withErrorHandling<T extends any[]>(
+export function withErrorHandling<T extends unknown[]>(
   handler: (...args: T) => Promise<NextResponse>
 ) {
   return async (...args: T): Promise<NextResponse> => {
@@ -254,9 +254,9 @@ export function withErrorHandling<T extends any[]>(
  * Async handler wrapper
  */
 export function asyncHandler(
-  fn: (req: NextRequest, context?: any) => Promise<NextResponse>
+  fn: (req: NextRequest, context?: unknown) => Promise<NextResponse>
 ) {
-  return (req: NextRequest, context?: any) => {
+  return (req: NextRequest, context?: unknown) => {
     return Promise.resolve(fn(req, context)).catch((error) => {
       return errorToApiResponse(error)
     })
@@ -268,7 +268,7 @@ export function asyncHandler(
  */
 export async function validateRequest<T>(
   req: NextRequest,
-  schema: any
+  schema: ZodSchema<T>
 ): Promise<T> {
   try {
     const body = await req.json()
