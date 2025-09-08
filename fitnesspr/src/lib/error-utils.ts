@@ -92,15 +92,26 @@ export function generateErrorMetadata(
   error: Error,
   context: ErrorContext = 'global'
 ): ErrorMetadata {
-  return {
+  const metadata: ErrorMetadata = {
     context,
     severity: determineErrorSeverity(error, context),
     category: categorizeError(error, context),
     timestamp: new Date(),
-    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent : undefined,
-    retryable: isRetryableError(error),
-    supportContact: getSupportContact(context)
+    retryable: isRetryableError(error)
   }
+
+  // Add optional properties only if they have values
+  const userAgent = typeof window !== 'undefined' ? window.navigator?.userAgent : undefined
+  if (userAgent) {
+    metadata.userAgent = userAgent
+  }
+
+  const supportContact = getSupportContact(context)
+  if (supportContact) {
+    metadata.supportContact = supportContact
+  }
+
+  return metadata
 }
 
 /**
@@ -129,13 +140,23 @@ export function createErrorReport(
 ): ErrorReport {
   const metadata = generateErrorMetadata(error, context)
   
-  return {
+  const report: ErrorReport = {
     error,
     metadata,
-    stackTrace: error.stack,
-    breadcrumbs: getBreadcrumbs(),
     ...additionalData
   }
+
+  // Add optional properties only if they have values
+  if (error.stack) {
+    report.stackTrace = error.stack
+  }
+
+  const breadcrumbs = getBreadcrumbs()
+  if (breadcrumbs.length > 0) {
+    report.breadcrumbs = breadcrumbs
+  }
+
+  return report
 }
 
 /**
