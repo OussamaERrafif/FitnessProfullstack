@@ -51,30 +51,30 @@ async def get_current_user(
 ) -> User:
     """
     Retrieve the currently authenticated user from JWT token.
-    
+
     This dependency function extracts and validates the JWT token from the
     Authorization header, verifies its authenticity, and returns the corresponding
     user object from the database.
-    
+
     Args:
         db: Database session dependency for user lookups
         token: JWT token extracted from Authorization header via OAuth2PasswordBearer
-        
+
     Returns:
         User: The authenticated user object with full profile information
-        
+
     Raises:
         HTTPException: 401 if token is invalid, expired, or user not found
-        
+
     Example:
         This function is typically used as a dependency in protected endpoints:
-        
+
         ```python
         @router.get("/protected")
         def protected_endpoint(current_user: User = Depends(get_current_user)):
             return {"user_id": current_user.id, "email": current_user.email}
         ```
-        
+
     Security Notes:
         - Verifies JWT signature and expiration
         - Validates user exists and is active in database
@@ -107,22 +107,22 @@ def register(
 ) -> Any:
     """
     Register a new user account in the system.
-    
+
     This endpoint creates a new user account with the provided registration data.
     It validates that the email is unique, securely hashes the password, and
     creates the user record in the database.
-    
+
     Args:
         db: Database session dependency for user operations
         user_in: User registration data validated against UserRegister schema
-        
+
     Returns:
         UserResponse: The newly created user profile (without password)
-        
+
     Raises:
         HTTPException: 400 if user with email already exists
         HTTPException: 422 if input validation fails
-        
+
     Example Request:
         ```json
         {
@@ -132,19 +132,19 @@ def register(
             "role": "trainer"
         }
         ```
-        
+
     Example Response:
         ```json
         {
             "id": 1,
-            "email": "trainer@example.com", 
+            "email": "trainer@example.com",
             "name": "John Doe",
             "role": "trainer",
             "is_active": true,
             "created_at": "2024-01-01T00:00:00Z"
         }
         ```
-        
+
     Security Features:
         - Email uniqueness validation
         - Password hashing using bcrypt
@@ -171,29 +171,29 @@ def login(
 ) -> Any:
     """
     Authenticate user and generate access token.
-    
+
     This endpoint implements OAuth2 password flow for user authentication.
     It validates the provided credentials, generates a JWT access token,
     and returns it for use in subsequent authenticated requests.
-    
+
     Args:
         db: Database session dependency for user authentication
         form_data: OAuth2 form data containing username (email) and password
-        
+
     Returns:
         Token: JWT access token with expiration and token type information
-        
+
     Raises:
         HTTPException: 401 if credentials are incorrect
         HTTPException: 400 if user account is inactive
         HTTPException: 422 if form data is invalid
-        
+
     Example Request (form data):
         ```
         username: trainer@example.com
         password: securepassword123
         ```
-        
+
     Example Response:
         ```json
         {
@@ -202,19 +202,19 @@ def login(
             "expires_in": 43200
         }
         ```
-        
+
     Authentication Flow:
         1. Validate email and password against database
         2. Check if user account is active
         3. Generate JWT token with configurable expiration
         4. Return token for Authorization header usage
-        
+
     Token Usage:
         Include the returned token in subsequent requests:
         ```
         Authorization: Bearer {access_token}
         ```
-        
+
     Security Features:
         - Secure password verification using bcrypt
         - JWT tokens with configurable expiration time
@@ -253,37 +253,37 @@ def read_users_me(
 ) -> Any:
     """
     Retrieve the current authenticated user's profile information.
-    
+
     This endpoint returns the complete profile information for the currently
     authenticated user. It requires a valid JWT token in the Authorization header.
-    
+
     Args:
         current_user: The authenticated user injected via dependency
-        
+
     Returns:
         UserResponse: Complete user profile information (excluding sensitive data)
-        
+
     Raises:
         HTTPException: 401 if authentication token is invalid or expired
-        
+
     Example Response:
         ```json
         {
             "id": 1,
             "email": "trainer@example.com",
-            "name": "John Doe", 
+            "name": "John Doe",
             "role": "trainer",
             "is_active": true,
             "created_at": "2024-01-01T00:00:00Z",
             "updated_at": "2024-01-01T00:00:00Z"
         }
         ```
-        
+
     Headers Required:
         ```
         Authorization: Bearer {access_token}
         ```
-        
+
     Use Cases:
         - Displaying user profile in UI
         - Verifying user identity and role

@@ -84,7 +84,7 @@ export default function ClientProfile({ params }: ClientProfileProps) {
             router.push('/login')
             return
           }
-        } catch (err) {
+        } catch {
           router.push('/login')
           return
         }

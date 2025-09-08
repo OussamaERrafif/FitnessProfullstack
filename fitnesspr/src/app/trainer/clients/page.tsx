@@ -61,7 +61,7 @@ export default function TrainerClients() {
             router.push('/login')
             return
           }
-        } catch (err) {
+        } catch {
           router.push('/login')
           return
         }

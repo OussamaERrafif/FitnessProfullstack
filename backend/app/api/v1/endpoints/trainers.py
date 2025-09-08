@@ -39,28 +39,30 @@ router = APIRouter()
 def read_trainers(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0, description="Number of records to skip for pagination"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of records to return"
+    ),
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Retrieve a paginated list of all trainers.
-    
+
     This endpoint returns a list of trainer profiles with support for pagination.
     Results include trainer specializations, experience, certifications, and rates.
-    
+
     Args:
         db: Database session dependency
         skip: Number of records to skip (for pagination, default: 0)
         limit: Maximum records to return (default: 100, max: 1000)
         current_user: Authenticated user from JWT token
-        
+
     Returns:
         List[TrainerResponse]: List of trainer objects with full profile information
-        
+
     Raises:
         HTTPException: 401 if authentication fails
         HTTPException: 422 if pagination parameters are invalid
-        
+
     Example Response:
         ```json
         [
@@ -92,24 +94,24 @@ def create_trainer(
 ) -> Any:
     """
     Create a new trainer profile for the authenticated user.
-    
+
     This endpoint creates a trainer profile associated with the current user's account.
     The user must not already have a trainer profile. All input data is validated
     according to the TrainerCreate schema.
-    
+
     Args:
         db: Database session dependency
         trainer_in: Trainer data validated against TrainerCreate schema
         current_user: Authenticated user from JWT token
-        
+
     Returns:
         TrainerResponse: The newly created trainer profile with generated ID
-        
+
     Raises:
         HTTPException: 401 if authentication fails
         HTTPException: 400 if user already has a trainer profile
         HTTPException: 422 if input validation fails
-        
+
     Example Request:
         ```json
         {
@@ -120,7 +122,7 @@ def create_trainer(
             "hourly_rate": 75.00
         }
         ```
-        
+
     Example Response:
         ```json
         {
@@ -129,7 +131,7 @@ def create_trainer(
             "specialization": "Weight Training",
             "experience_years": 5,
             "bio": "Certified personal trainer...",
-            "certification": "NASM-CPT", 
+            "certification": "NASM-CPT",
             "hourly_rate": 75.00,
             "created_at": "2024-01-01T00:00:00Z",
             "updated_at": "2024-01-01T00:00:00Z"
@@ -150,23 +152,23 @@ def read_trainer(
 ) -> Any:
     """
     Retrieve a specific trainer profile by ID.
-    
+
     This endpoint returns detailed information about a single trainer including
     their specialization, experience, certifications, rates, and bio.
-    
+
     Args:
         db: Database session dependency
         trainer_id: Unique identifier of the trainer to retrieve
         current_user: Authenticated user from JWT token
-        
+
     Returns:
         TrainerResponse: Complete trainer profile information
-        
+
     Raises:
         HTTPException: 401 if authentication fails
         HTTPException: 404 if trainer with given ID doesn't exist
         HTTPException: 422 if trainer_id is not a valid integer
-        
+
     Example Response:
         ```json
         {
@@ -199,26 +201,26 @@ def update_trainer(
 ) -> Any:
     """
     Update an existing trainer profile.
-    
+
     This endpoint allows partial or complete updates to a trainer profile.
     Only provided fields will be updated; omitted fields remain unchanged.
     Users can only update their own trainer profiles.
-    
+
     Args:
         db: Database session dependency
         trainer_id: Unique identifier of the trainer to update
         trainer_in: Update data validated against TrainerUpdate schema
         current_user: Authenticated user from JWT token
-        
+
     Returns:
         TrainerResponse: The updated trainer profile
-        
+
     Raises:
         HTTPException: 401 if authentication fails
         HTTPException: 403 if user tries to update another user's profile
         HTTPException: 404 if trainer with given ID doesn't exist
         HTTPException: 422 if input validation fails
-        
+
     Example Request (partial update):
         ```json
         {
@@ -226,7 +228,7 @@ def update_trainer(
             "bio": "Updated bio with new achievements..."
         }
         ```
-        
+
     Example Response:
         ```json
         {
@@ -260,32 +262,32 @@ def delete_trainer(
 ) -> Any:
     """
     Delete a trainer profile permanently.
-    
+
     This endpoint permanently removes a trainer profile from the system.
     This action is irreversible and will affect related data such as
     associated clients, programs, and sessions.
-    
+
     Args:
         db: Database session dependency
         trainer_id: Unique identifier of the trainer to delete
         current_user: Authenticated user from JWT token
-        
+
     Returns:
         dict: Success message confirming deletion
-        
+
     Raises:
         HTTPException: 401 if authentication fails
         HTTPException: 403 if user tries to delete another user's profile
         HTTPException: 404 if trainer with given ID doesn't exist
         HTTPException: 409 if deletion would violate database constraints
-        
+
     Example Response:
         ```json
         {
             "message": "Trainer deleted successfully"
         }
         ```
-        
+
     Warning:
         This operation is irreversible. All associated data including
         client relationships, programs, and session history will be affected.
