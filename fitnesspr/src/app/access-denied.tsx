@@ -44,7 +44,7 @@ export default function AccessDeniedPage() {
                 className="w-full"
                 variant="default"
               >
-                <Link href="/client/pin-login">
+                <Link href="/login">
                   Client Login
                 </Link>
               </Button>

@@ -58,10 +58,10 @@ export default function HomePage() {
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" asChild className="hidden sm:inline-flex">
-                <Link href="/trainer/dashboard">Sign In</Link>
+                <Link href="/login">Sign In</Link>
               </Button>
               <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                <Link href="/demo">Request Demo</Link>
+                <Link href="/register">Get Started</Link>
               </Button>
             </div>
           </div>
@@ -92,13 +92,13 @@ export default function HomePage() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" asChild>
-                <Link href="/demo">
-                  Start Free Trial
+                <Link href="/register">
+                  Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="text-lg px-8 py-4 border-2" asChild>
-                <Link href="#demo">
+                <Link href="/demo">
                   <Play className="mr-2 h-5 w-5" />
                   Watch Demo
                 </Link>
@@ -204,10 +204,10 @@ export default function HomePage() {
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-red-600 rounded-xl flex items-center justify-center mb-4">
                   <Smartphone className="h-6 w-6 text-white" />
                 </div>
-                <CardTitle className="text-xl">PIN-Based Client Access</CardTitle>
+                <CardTitle className="text-xl">Secure Client Portal</CardTitle>
                 <CardDescription className="text-base">
-                  Secure, zero-friction client portal access with 6-digit PINs. 
-                  No passwords, no apps to download - just instant access to their programs.
+                  Professional client portal with secure email/password authentication. 
+                  Role-based access ensures clients and trainers get personalized experiences.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -588,7 +588,7 @@ export default function HomePage() {
                   ))}
                 </div>
                 <p className="text-gray-700 mb-6 text-lg">
-                  "The PIN-based client access is genius. My clients love how simple it is, 
+                  "The secure client portal is exceptional. My clients love the professional experience, 
                   and I've seen a 60% increase in program compliance."
                 </p>
                 <div className="flex items-center">
@@ -761,11 +761,11 @@ export default function HomePage() {
 
             <div className="border-b border-gray-200 pb-8">
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                Is client data secure with PIN-based access?
+                How secure is the client authentication system?
               </h3>
               <p className="text-gray-600">
-                Yes, PIN access is secured with rate limiting, encryption, and automatic session timeouts. 
-                Clients can only access their own data, and all interactions are logged for security monitoring.
+                We use industry-standard email/password authentication with JWT tokens, rate limiting, and automatic session management. 
+                All client data is encrypted and access is strictly role-based for maximum security.
               </p>
             </div>
 

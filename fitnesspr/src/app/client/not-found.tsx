@@ -46,7 +46,7 @@ export default function ClientNotFound() {
                 className="w-full"
                 variant="default"
               >
-                <Link href="/client/pin-login">
+                <Link href="/login">
                   <KeyRound className="w-4 h-4 mr-2" />
                   Enter PIN
                 </Link>

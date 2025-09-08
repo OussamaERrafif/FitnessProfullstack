@@ -45,7 +45,7 @@ export function categorizeError(error: Error, context?: ErrorContext): ErrorCate
 /**
  * Determines error severity based on error type and context
  */
-export function determineErrorSeverity(error: Error, _context?: ErrorContext): ErrorSeverity {
+export function determineErrorSeverity(error: Error, context?: ErrorContext): ErrorSeverity {
   const message = error.message.toLowerCase()
   
   // Critical errors that break the entire app
@@ -106,23 +106,9 @@ export function generateErrorMetadata(
     severity: determineErrorSeverity(error, context),
     category: categorizeError(error, context),
     timestamp: new Date(),
-    retryable: isRetryableError(error)
-  }
-
-  // Add optional properties only if they have values
-    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent || '' : '',
+    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent || 'unknown' : 'server',
     retryable: isRetryableError(error),
     supportContact: getSupportContact(context)
-  }
-  
-  const userAgent = typeof window !== 'undefined' ? window.navigator?.userAgent : undefined
-  if (userAgent) {
-    metadata.userAgent = userAgent
-  }
-
-  const supportContact = getSupportContact(context)
-  if (supportContact) {
-    metadata.supportContact = supportContact
   }
 
   
@@ -158,27 +144,9 @@ export function createErrorReport(
   const report: ErrorReport = {
     error,
     metadata,
-    ...additionalData
-  }
-
-  // Add optional properties only if they have values
-  if (error.stack) {
-    report.stackTrace = error.stack
-  }
-
-  const breadcrumbs = getBreadcrumbs()
-  if (breadcrumbs.length > 0) {
-    report.breadcrumbs = breadcrumbs
-  }
-
-    stackTrace: error.stack || '',
-
+    stackTrace: error.stack || 'No stack trace available',
     breadcrumbs: getBreadcrumbs(),
     ...additionalData
-  }
-  
-  if (error.stack) {
-    report.stackTrace = error.stack
   }
   
   return report

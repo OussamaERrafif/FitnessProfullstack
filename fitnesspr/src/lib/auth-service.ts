@@ -36,11 +36,19 @@ export const authService = {
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
+      // Backend expects OAuth2PasswordRequestForm format
+      const formData = new FormData();
+      formData.append('username', credentials.email);
+      formData.append('password', credentials.password);
+
       const response = await apiRequest<AuthResponse>(
         API_ENDPOINTS.auth.login(),
         {
           method: 'POST',
-          body: JSON.stringify(credentials),
+          body: formData,
+          headers: {
+            // Don't set Content-Type, let the browser set it for FormData
+          },
         }
       );
       
