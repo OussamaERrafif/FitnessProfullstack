@@ -6,7 +6,15 @@ from sqlalchemy import create_engine
 
 from app.core.config import settings
 from app.core.database import Base
-from app.models import *  # Import all models to register them
+# Import all models to register them
+from app.models.client import Client  # noqa: F401
+from app.models.exercise import Exercise  # noqa: F401
+from app.models.meal import Meal, MealPlan  # noqa: F401
+from app.models.payment import Payment, PaymentMethod, Subscription  # noqa: F401
+from app.models.program import Program  # noqa: F401
+from app.models.progress import Goal, Progress, WorkoutLog  # noqa: F401
+from app.models.trainer import Trainer  # noqa: F401
+from app.models.user import User  # noqa: F401
 
 
 def init_db():

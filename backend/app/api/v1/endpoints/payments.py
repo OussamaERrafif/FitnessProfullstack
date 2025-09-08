@@ -19,7 +19,6 @@ from app.schemas.payment import (
     StripeWebhookPayload,
     SubscriptionCreate,
     SubscriptionResponse,
-    SubscriptionUpdate,
 )
 from app.services.payment_service import (
     PaymentMethodService,
@@ -75,7 +74,8 @@ def create_payment(
     """
     Create new payment.
     """
-    # Only clients can create payments, or trainers can create payments for their clients
+    # Only clients can create payments, or trainers can create payments
+    # for their clients
     if not current_user.is_trainer and not hasattr(current_user, "client"):
         raise HTTPException(status_code=403, detail="Access denied")
 

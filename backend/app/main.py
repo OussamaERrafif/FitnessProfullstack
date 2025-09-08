@@ -30,9 +30,9 @@ async def lifespan(app: FastAPI):
     logger.info("FitnessPr Backend starting up...")
     logger.info(f"Environment: {'Development' if settings.DEBUG else 'Production'}")
     logger.info(f"API Version: {settings.API_V1_STR}")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("FitnessPr Backend shutting down...")
 
@@ -43,7 +43,8 @@ limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="FastAPI backend for FitnessPr - Comprehensive fitness trainer management system",
+    description="FastAPI backend for FitnessPr - "
+    "Comprehensive fitness trainer management system",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     lifespan=lifespan,
 )
