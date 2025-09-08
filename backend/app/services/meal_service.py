@@ -162,7 +162,7 @@ class MealService:
             query = query.filter(Meal.client_id == client_id)
         if is_template is not None:
             query = query.filter(Meal.is_template == is_template)
-        return query.filter(Meal.is_active == True).offset(skip).limit(limit).all()
+        return query.filter(Meal.is_active is True).offset(skip).limit(limit).all()
 
     def create(self, obj_in: MealCreate, trainer_id: int) -> Meal:
         """
@@ -289,8 +289,8 @@ class MealService:
             .filter(
                 and_(
                     Meal.trainer_id == trainer_id,
-                    Meal.is_template == True,
-                    Meal.is_active == True,
+                    Meal.is_template is True,
+                    Meal.is_active is True,
                 )
             )
             .offset(skip)
@@ -322,7 +322,7 @@ class MealService:
         """
         return (
             self.db.query(Meal)
-            .filter(and_(Meal.client_id == client_id, Meal.is_active == True))
+            .filter(and_(Meal.client_id == client_id, Meal.is_active is True))
             .offset(skip)
             .limit(limit)
             .all()
@@ -372,7 +372,7 @@ class MealService:
             ... )
         """
         query = self.db.query(Meal).filter(
-            and_(Meal.trainer_id == trainer_id, Meal.is_active == True)
+            and_(Meal.trainer_id == trainer_id, Meal.is_active is True)
         )
 
         if is_vegetarian is not None:
@@ -412,6 +412,7 @@ class MealService:
             >>> print(f"Trainer has {template_count} templates, client has {client_meal_count} meals")
         """
         query = self.db.query(Meal).filter(Meal.is_active == True)
+
         if trainer_id:
             query = query.filter(Meal.trainer_id == trainer_id)
         if client_id:
@@ -499,7 +500,7 @@ class MealPlanService:
             query = query.filter(MealPlan.trainer_id == trainer_id)
         if client_id:
             query = query.filter(MealPlan.client_id == client_id)
-        return query.filter(MealPlan.is_active == True).offset(skip).limit(limit).all()
+        return query.filter(MealPlan.is_active is True).offset(skip).limit(limit).all()
 
     def create(self, obj_in: MealPlanCreate, trainer_id: int) -> MealPlan:
         """
@@ -668,7 +669,7 @@ class MealPlanService:
             .filter(
                 and_(
                     MealPlan.client_id == client_id,
-                    MealPlan.is_active == True,
+                    MealPlan.is_active is True,
                     MealPlan.start_date <= datetime.now(),
                     or_(
                         MealPlan.end_date.is_(None), MealPlan.end_date >= datetime.now()

@@ -594,7 +594,7 @@ class WorkoutLogService:
                 and_(
                     WorkoutLog.client_id == client_id,
                     WorkoutLog.date >= start_date,
-                    WorkoutLog.completed == True,
+                    WorkoutLog.completed is True,
                 )
             )
             .all()
@@ -856,8 +856,8 @@ class GoalService:
                 and_(
                     Goal.client_id == client_id,
                     Goal.target_date < datetime.now(),
-                    Goal.is_achieved == False,
-                    Goal.is_active == True,
+                    Goal.is_achieved is False,
+                    Goal.is_active is True,
                 )
             )
             .all()

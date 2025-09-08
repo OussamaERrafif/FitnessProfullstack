@@ -19,7 +19,6 @@ Example:
 
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.client import Client

@@ -2,8 +2,8 @@
  * Backend API client configuration and utilities
  */
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-const API_BASE_URL = `${BACKEND_URL}/api/v1`;
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api';
+const API_BASE_URL = `${BACKEND_URL}`;
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -112,6 +112,10 @@ export const API_ENDPOINTS = {
     get: (id: string) => `/exercises/${id}`,
     update: (id: string) => `/exercises/${id}`,
     delete: (id: string) => `/exercises/${id}`,
+    search: () => '/exercises/search',
+    categories: () => '/exercises/categories',
+    muscleGroups: () => '/exercises/muscle-groups',
+    byCategory: (category: string) => `/exercises/category/${category}`,
   },
   
   // Programs
@@ -121,6 +125,9 @@ export const API_ENDPOINTS = {
     get: (id: string) => `/programs/${id}`,
     update: (id: string) => `/programs/${id}`,
     delete: (id: string) => `/programs/${id}`,
+    clientPrograms: (clientId: string) => `/programs/client/${clientId}`,
+    addExercise: (programId: string) => `/programs/${programId}/exercises`,
+    removeExercise: (programId: string, exerciseId: string) => `/programs/${programId}/exercises/${exerciseId}`,
   },
   
   // Meals

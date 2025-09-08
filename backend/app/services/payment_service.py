@@ -56,10 +56,9 @@ Security:
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.models.payment import Payment, PaymentMethod, Subscription
 from app.schemas.payment import (
     PaymentCreate,
@@ -385,6 +384,7 @@ class PaymentService:
             >>> intent = payment_service.create_stripe_payment_intent(payment)
             >>> client_secret = intent["client_secret"]
             >>> # Use client_secret in frontend for payment confirmation
+
         """
         # This is a placeholder for Stripe integration
         # In a real implementation, you would use the Stripe SDK
@@ -686,7 +686,7 @@ class PaymentMethodService:
             .filter(
                 and_(
                     PaymentMethod.client_id == client_id,
-                    PaymentMethod.is_active == True,
+                    PaymentMethod.is_active is True,
                 )
             )
             .all()
@@ -717,8 +717,8 @@ class PaymentMethodService:
             .filter(
                 and_(
                     PaymentMethod.client_id == client_id,
-                    PaymentMethod.is_default == True,
-                    PaymentMethod.is_active == True,
+                    PaymentMethod.is_default is True,
+                    PaymentMethod.is_active is True,
                 )
             )
             .first()

@@ -45,7 +45,7 @@ export function categorizeError(error: Error, context?: ErrorContext): ErrorCate
 /**
  * Determines error severity based on error type and context
  */
-export function determineErrorSeverity(error: Error, context?: ErrorContext): ErrorSeverity {
+export function determineErrorSeverity(error: Error, _context?: ErrorContext): ErrorSeverity {
   const message = error.message.toLowerCase()
   
   // Critical errors that break the entire app
@@ -55,6 +55,15 @@ export function determineErrorSeverity(error: Error, context?: ErrorContext): Er
   
   // High severity errors that affect major functionality
   if (message.includes('database') || message.includes('auth')) {
+    return 'high'
+  }
+  
+  // Context-specific severity adjustments
+  if (context === 'auth' && (message.includes('login') || message.includes('token'))) {
+    return 'high'
+  }
+  
+  if (context === 'payment' && message.includes('payment')) {
     return 'high'
   }
   
@@ -92,15 +101,32 @@ export function generateErrorMetadata(
   error: Error,
   context: ErrorContext = 'global'
 ): ErrorMetadata {
-  return {
+  const metadata: ErrorMetadata = {
     context,
     severity: determineErrorSeverity(error, context),
     category: categorizeError(error, context),
     timestamp: new Date(),
-    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent : undefined,
+    retryable: isRetryableError(error)
+  }
+
+  // Add optional properties only if they have values
+    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent || '' : '',
     retryable: isRetryableError(error),
     supportContact: getSupportContact(context)
   }
+  
+  const userAgent = typeof window !== 'undefined' ? window.navigator?.userAgent : undefined
+  if (userAgent) {
+    metadata.userAgent = userAgent
+  }
+
+  const supportContact = getSupportContact(context)
+  if (supportContact) {
+    metadata.supportContact = supportContact
+  }
+
+  
+  return metadata
 }
 
 /**
@@ -129,13 +155,33 @@ export function createErrorReport(
 ): ErrorReport {
   const metadata = generateErrorMetadata(error, context)
   
-  return {
+  const report: ErrorReport = {
     error,
     metadata,
-    stackTrace: error.stack,
+    ...additionalData
+  }
+
+  // Add optional properties only if they have values
+  if (error.stack) {
+    report.stackTrace = error.stack
+  }
+
+  const breadcrumbs = getBreadcrumbs()
+  if (breadcrumbs.length > 0) {
+    report.breadcrumbs = breadcrumbs
+  }
+
+    stackTrace: error.stack || '',
+
     breadcrumbs: getBreadcrumbs(),
     ...additionalData
   }
+  
+  if (error.stack) {
+    report.stackTrace = error.stack
+  }
+  
+  return report
 }
 
 /**

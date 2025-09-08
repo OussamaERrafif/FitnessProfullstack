@@ -97,6 +97,7 @@ const actionTypes = {
 } as const
 
 /** Global counter for generating unique toast IDs */
+
 let count = 0
 
 /**
@@ -120,6 +121,7 @@ type ActionType = typeof actionTypes
  * Defines the structure of actions that can be dispatched
  * to modify toast state, each with specific payload requirements.
  */
+
 type Action =
   | {
       /** Action to add a new toast to the queue */

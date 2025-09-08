@@ -19,7 +19,7 @@ Example:
 
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.exercise import Exercise
@@ -288,7 +288,7 @@ class ExerciseService:
             )
 
         # Only active exercises
-        query = query.filter(Exercise.is_active == True)
+        query = query.filter(Exercise.is_active is True)
 
         return query.order_by(Exercise.name).offset(skip).limit(limit).all()
 
@@ -317,7 +317,7 @@ class ExerciseService:
         """
         return (
             self.db.query(Exercise)
-            .filter(and_(Exercise.category == category, Exercise.is_active == True))
+            .filter(and_(Exercise.category == category, Exercise.is_active is True))
             .order_by(Exercise.name)
             .offset(skip)
             .limit(limit)
@@ -352,7 +352,7 @@ class ExerciseService:
             .filter(
                 and_(
                     Exercise.muscle_groups.ilike(f"%{muscle_group}%"),
-                    Exercise.is_active == True,
+                    Exercise.is_active is True,
                 )
             )
             .order_by(Exercise.name)
@@ -387,7 +387,7 @@ class ExerciseService:
         return (
             self.db.query(Exercise)
             .filter(
-                and_(Exercise.equipment_needed == equipment, Exercise.is_active == True)
+                and_(Exercise.equipment_needed == equipment, Exercise.is_active is True)
             )
             .order_by(Exercise.name)
             .offset(skip)
@@ -418,7 +418,7 @@ class ExerciseService:
         """
         result = (
             self.db.query(Exercise.category)
-            .filter(and_(Exercise.category.isnot(None), Exercise.is_active == True))
+            .filter(and_(Exercise.category.isnot(None), Exercise.is_active is True))
             .distinct()
             .all()
         )
@@ -452,7 +452,7 @@ class ExerciseService:
         result = (
             self.db.query(Exercise.muscle_groups)
             .filter(
-                and_(Exercise.muscle_groups.isnot(None), Exercise.is_active == True)
+                and_(Exercise.muscle_groups.isnot(None), Exercise.is_active is True)
             )
             .distinct()
             .all()
