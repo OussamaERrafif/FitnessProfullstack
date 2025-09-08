@@ -1,40 +1,91 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Users, Calendar, DollarSign, TrendingUp, Plus, Activity } from "lucide-react"
+import { Users, Calendar, DollarSign, TrendingUp, Plus, Loader2 } from "lucide-react"
 import Link from "next/link"
-
-// Mock data for demonstration
-const mockStats = {
-  totalClients: 24,
-  activeClients: 18,
-  todaySessions: 5,
-  monthlyRevenue: 3200,
-  progressCompletion: 78
-}
-
-const mockTodaySessions = [
-  { id: "1", clientName: "Sarah Johnson", time: "09:00", type: "Personal Training", status: "confirmed" },
-  { id: "2", clientName: "Mike Chen", time: "10:30", type: "Consultation", status: "confirmed" },
-  { id: "3", clientName: "Emily Davis", time: "14:00", type: "Group Class", status: "pending" },
-  { id: "4", clientName: "David Wilson", time: "16:30", type: "Personal Training", status: "confirmed" },
-  { id: "5", clientName: "Lisa Brown", time: "18:00", type: "Virtual Session", status: "confirmed" },
-]
-
-const mockRecentClients = [
-  { id: "1", name: "Sarah Johnson", lastSession: "2 days ago", progress: 85 },
-  { id: "2", name: "Mike Chen", lastSession: "1 week ago", progress: 92 },
-  { id: "3", name: "Emily Davis", lastSession: "3 days ago", progress: 67 },
-  { id: "4", name: "David Wilson", lastSession: "Yesterday", progress: 78 },
-]
+import { statisticsService, TrainerStats, ClientProgress } from "@/lib/statistics-service"
+import { sessionsService, Session } from "@/lib/sessions-service"
+import { authService } from "@/lib/auth-service"
 
 export default function TrainerDashboard() {
+  const [stats, setStats] = useState<TrainerStats | null>(null)
+  const [todaySessions, setTodaySessions] = useState<Session[]>([])
+  const [recentProgress, setRecentProgress] = useState<ClientProgress[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string>("")
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setIsLoading(true)
+        setError("")
+
+        // Check if user is authenticated
+        if (!authService.isAuthenticated()) {
+          setError("Please log in to view dashboard")
+          return
+        }
+
+        // Load dashboard data in parallel
+        const [dashboardStats, todaySessionsData] = await Promise.all([
+          statisticsService.getDashboardOverview(),
+          sessionsService.getTodaySessions(),
+        ])
+
+        setStats(dashboardStats.stats)
+        setRecentProgress(dashboardStats.recentProgress)
+        setTodaySessions(todaySessionsData)
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err)
+        setError("Failed to load dashboard data. Using default values.")
+        
+        // Set fallback data
+        setStats({
+          total_clients: 0,
+          active_clients: 0,
+          todays_sessions: 0,
+          monthly_revenue: 0,
+          progress_completion: 0,
+          client_growth: 0,
+          engagement_rate: 0,
+        })
+        setTodaySessions([])
+        setRecentProgress([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadDashboardData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <p className="text-sm text-yellow-600">{error}</p>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome back, Alex!</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Welcome back!</h1>
             <p className="text-gray-600 mt-1">Here's what's happening with your training business today.</p>
           </div>
           <div className="flex space-x-3">
@@ -62,9 +113,9 @@ export default function TrainerDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockStats.totalClients}</div>
+            <div className="text-2xl font-bold">{stats?.total_clients || 0}</div>
             <p className="text-xs text-muted-foreground">
-              +2 from last month
+              {stats?.client_growth ? `+${stats.client_growth} from last month` : 'No growth data'}
             </p>
           </CardContent>
         </Card>
@@ -75,9 +126,9 @@ export default function TrainerDashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockStats.activeClients}</div>
+            <div className="text-2xl font-bold">{stats?.active_clients || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {Math.round((mockStats.activeClients / mockStats.totalClients) * 100)}% engagement rate
+              {stats?.engagement_rate ? `${Math.round(stats.engagement_rate)}% engagement rate` : 'No engagement data'}
             </p>
           </CardContent>
         </Card>
@@ -88,9 +139,12 @@ export default function TrainerDashboard() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockStats.todaySessions}</div>
+            <div className="text-2xl font-bold">{stats?.todays_sessions || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Next session at 9:00 AM
+              {todaySessions.length > 0 
+                ? `Next session at ${new Date(todaySessions[0]?.scheduled_at || '').toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+                : 'No sessions scheduled'
+              }
             </p>
           </CardContent>
         </Card>
@@ -101,9 +155,9 @@ export default function TrainerDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${mockStats.monthlyRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${stats?.monthly_revenue?.toLocaleString() || 0}</div>
             <p className="text-xs text-muted-foreground">
-              +12% from last month
+              Current month earnings
             </p>
           </CardContent>
         </Card>
@@ -118,24 +172,38 @@ export default function TrainerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockTodaySessions.map((session) => (
-                <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{session.clientName}</p>
-                    <p className="text-sm text-gray-600">{session.type}</p>
+              {todaySessions.length > 0 ? (
+                todaySessions.map((session) => (
+                  <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">{session.client_name || 'Unknown Client'}</p>
+                      <p className="text-sm text-gray-600">
+                        {session.session_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">
+                        {new Date(session.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                      </p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        session.status === 'confirmed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : session.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {session.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">{session.time}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      session.status === 'confirmed' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {session.status}
-                    </span>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No sessions scheduled for today</p>
+                  <p className="text-sm">Book a session to get started</p>
                 </div>
-              ))}
+              )}
             </div>
             <Button variant="outline" className="w-full mt-4" asChild>
               <Link href="/trainer/calendar">View Full Calendar</Link>
@@ -151,25 +219,33 @@ export default function TrainerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockRecentClients.map((client) => (
-                <div key={client.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{client.name}</p>
-                    <p className="text-sm text-gray-600">Last session: {client.lastSession}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary-600 rounded-full"
-                          style={{ width: `${client.progress}%` }}
-                        />
+              {recentProgress.length > 0 ? (
+                recentProgress.map((client) => (
+                  <div key={client.client_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">{client.client_name}</p>
+                      <p className="text-sm text-gray-600">Last session: {client.last_session}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary-600 rounded-full"
+                            style={{ width: `${client.progress_percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium">{client.progress_percentage}%</span>
                       </div>
-                      <span className="text-sm font-medium">{client.progress}%</span>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No recent client activity</p>
+                  <p className="text-sm">Client progress will appear here</p>
                 </div>
-              ))}
+              )}
             </div>
             <Button variant="outline" className="w-full mt-4" asChild>
               <Link href="/trainer/clients">View All Clients</Link>

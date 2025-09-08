@@ -147,4 +147,20 @@ export const API_ENDPOINTS = {
     create: () => '/payments',
     get: (id: string) => `/payments/${id}`,
   },
+
+  // Sessions
+  sessions: {
+    list: () => '/sessions',
+    create: () => '/sessions',
+    get: (id: string) => `/sessions/${id}`,
+    update: (id: string) => `/sessions/${id}`,
+    delete: (id: string) => `/sessions/${id}`,
+  },
+
+  // Statistics
+  statistics: {
+    trainer: () => '/statistics/trainer',
+    clientProgress: () => '/statistics/client-progress',
+    revenue: () => '/statistics/revenue',
+  },
 } as const;

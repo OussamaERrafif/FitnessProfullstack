@@ -9,7 +9,6 @@ import {
   Phone, 
   MessageSquare, 
   Calendar,
-  Users,
   Building,
   CheckCircle,
   Clock,

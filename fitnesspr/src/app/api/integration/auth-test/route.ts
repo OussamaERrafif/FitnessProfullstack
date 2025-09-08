@@ -13,15 +13,20 @@ export async function GET() {
 
   for (const test of tests) {
     try {
-      const response = await fetch(`${BACKEND_URL}${test.path}`, {
+      const config: RequestInit = {
         method: test.method,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        // For POST requests, send empty body to trigger validation error
-        body: test.method === 'POST' ? '{}' : undefined,
-      });
+      };
+
+      // Add body only for POST requests
+      if (test.method === 'POST') {
+        config.body = '{}';
+      }
+
+      const response = await fetch(`${BACKEND_URL}${test.path}`, config);
 
       // We expect validation errors (422) or authentication errors (401)
       // These indicate the endpoints are accessible

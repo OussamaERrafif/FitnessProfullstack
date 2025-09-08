@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, UserPlus, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { generatePin } from "@/lib/utils"
+import { clientsService, CreateClientRequest } from "@/lib/clients-service"
 
 interface NewClientForm {
   name: string
@@ -39,7 +38,7 @@ export default function NewClientPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [pin, setPin] = useState("")
-  const router = useRouter()
+  // TODO: Add success state to display PIN to user
 
   const handleInputChange = (field: keyof NewClientForm, value: string) => {
     setFormData(prev => ({
@@ -76,42 +75,100 @@ export default function NewClientPage() {
     setIsLoading(true)
 
     try {
-      // Generate a unique PIN for the client
-      const clientPin = generatePin()
-      setPin(clientPin)
-
-      // Prepare client data
-      const clientData = {
-        ...formData,
-        pin: clientPin,
-        age: formData.age ? parseInt(formData.age) : null,
-        weight: formData.weight ? parseFloat(formData.weight) : null,
-        height: formData.height ? parseFloat(formData.height) : null,
+      // Use the clients service to create a client via backend API
+      const clientData: CreateClientRequest = {
+        name: formData.name,
+        email: formData.email,
       }
 
-      const response = await fetch('/api/clients', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(clientData),
+      // Add optional fields only if they have values
+      if (formData.phone?.trim()) clientData.phone = formData.phone
+      if (formData.age) clientData.age = parseInt(formData.age)
+      if (formData.weight) clientData.weight = parseFloat(formData.weight)
+      if (formData.height) clientData.height = parseFloat(formData.height)
+      if (formData.goals?.trim()) clientData.goals = formData.goals
+      if (formData.healthData?.trim()) clientData.health_data = formData.healthData
+      if (formData.fitnessLevel) clientData.fitness_level = formData.fitnessLevel as 'beginner' | 'intermediate' | 'advanced'
+
+      const newClient = await clientsService.createClient(clientData)
+
+      // Show success message with PIN
+      setPin(newClient.pin || 'N/A')
+      
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        age: "",
+        weight: "",
+        height: "",
+        goals: "",
+        healthData: "",
+        fitnessLevel: ""
       })
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        // Show success state with PIN
-        // In a real app, you might send this PIN via email or SMS
-        router.push(`/trainer/clients/${data.client.id}?newClient=true&pin=${clientPin}`)
-      } else {
-        setError(data.error || "Failed to create client. Please try again.")
-      }
-    } catch (err) {
-      setError("Something went wrong. Please try again.")
-      console.error('Error creating client:', err)
+      // Optionally redirect to client details
+      // router.push(`/trainer/clients/${newClient.id}?newClient=true`)
+    } catch (err: any) {
+      console.error('Failed to create client:', err)
+      setError(err.message || "Failed to create client. Please try again.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show success state if client was created successfully
+  if (pin) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Link href="/trainer/clients" className="flex items-center text-blue-600 hover:text-blue-800">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Clients
+          </Link>
+        </div>
+
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-green-600">Client Created Successfully!</CardTitle>
+            <CardDescription>
+              Your new client has been added to the system. Share the PIN below with them to access their dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-6">
+            <div className="p-6 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">Client Access PIN</p>
+              <p className="text-3xl font-bold font-mono text-blue-600">{pin}</p>
+            </div>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => {
+                  setPin("")
+                  setFormData({
+                    name: "",
+                    email: "",
+                    phone: "",
+                    age: "",
+                    weight: "",
+                    height: "",
+                    goals: "",
+                    healthData: "",
+                    fitnessLevel: ""
+                  })
+                }}
+                className="w-full"
+              >
+                Add Another Client
+              </Button>
+              <Button variant="outline" asChild className="w-full">
+                <Link href="/trainer/clients">View All Clients</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
