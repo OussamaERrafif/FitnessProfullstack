@@ -45,7 +45,7 @@ export function categorizeError(error: Error, context?: ErrorContext): ErrorCate
 /**
  * Determines error severity based on error type and context
  */
-export function determineErrorSeverity(error: Error, context?: ErrorContext): ErrorSeverity {
+export function determineErrorSeverity(error: Error, _context?: ErrorContext): ErrorSeverity {
   const message = error.message.toLowerCase()
   
   // Critical errors that break the entire app
@@ -97,7 +97,7 @@ export function generateErrorMetadata(
     severity: determineErrorSeverity(error, context),
     category: categorizeError(error, context),
     timestamp: new Date(),
-    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent : undefined,
+    userAgent: typeof window !== 'undefined' ? window.navigator?.userAgent || 'unknown' : 'server',
     retryable: isRetryableError(error),
     supportContact: getSupportContact(context)
   }
@@ -132,7 +132,7 @@ export function createErrorReport(
   return {
     error,
     metadata,
-    stackTrace: error.stack,
+    stackTrace: error.stack || 'No stack trace available',
     breadcrumbs: getBreadcrumbs(),
     ...additionalData
   }
