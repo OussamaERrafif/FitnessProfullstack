@@ -31,7 +31,7 @@ Dependencies:
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api.v1.endpoints.auth import get_current_user
@@ -202,7 +202,7 @@ def create_client(
 def read_client(
     *,
     db: Session = Depends(get_db),
-    client_id: int = Query(..., description="Unique identifier of the client"),
+    client_id: int = Path(..., description="Unique identifier of the client"),
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """
@@ -274,7 +274,7 @@ def read_client(
 def update_client(
     *,
     db: Session = Depends(get_db),
-    client_id: int = Query(..., description="Unique identifier of the client"),
+    client_id: int = Path(..., description="Unique identifier of the client"),
     client_in: ClientUpdate,
     current_user: User = Depends(get_current_user),
 ) -> Any:
@@ -358,7 +358,7 @@ def update_client(
 def delete_client(
     *,
     db: Session = Depends(get_db),
-    client_id: int = Query(..., description="Unique identifier of the client"),
+    client_id: int = Path(..., description="Unique identifier of the client"),
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """

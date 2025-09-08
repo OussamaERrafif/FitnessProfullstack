@@ -23,7 +23,7 @@ Dependencies:
 
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api.v1.endpoints.auth import get_current_user
@@ -145,7 +145,7 @@ def create_trainer(
 def read_trainer(
     *,
     db: Session = Depends(get_db),
-    trainer_id: int = Query(..., description="Unique identifier of the trainer"),
+    trainer_id: int = Path(..., description="Unique identifier of the trainer"),
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """
@@ -193,7 +193,7 @@ def read_trainer(
 def update_trainer(
     *,
     db: Session = Depends(get_db),
-    trainer_id: int = Query(..., description="Unique identifier of the trainer"),
+    trainer_id: int = Path(..., description="Unique identifier of the trainer"),
     trainer_in: TrainerUpdate,
     current_user: User = Depends(get_current_user),
 ) -> Any:
@@ -255,7 +255,7 @@ def update_trainer(
 def delete_trainer(
     *,
     db: Session = Depends(get_db),
-    trainer_id: int = Query(..., description="Unique identifier of the trainer"),
+    trainer_id: int = Path(..., description="Unique identifier of the trainer"),
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """
