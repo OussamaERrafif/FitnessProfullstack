@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Plus
 } from "lucide-react"
+import { clientsService } from "@/lib/clients-service"
 
 interface ClientData {
   id: string
@@ -68,14 +69,30 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
       try {
         const resolvedParams = await params
         
-        const response = await fetch(`/api/client/${resolvedParams.pin}`)
+        // Use clientsService to verify PIN and get client data
+        const client = await clientsService.verifyClientPin(resolvedParams.pin)
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch client data')
+        // Transform the client data to match the expected ClientData interface
+        const transformedData: ClientData = {
+          id: client.id,
+          name: client.name,
+          email: client.email,
+          pin: client.pin || resolvedParams.pin,
+          trainer: "Your Trainer", // This would come from the trainer relationship
+          currentTrainingPlan: {
+            title: "Current Training Program",
+            description: "Your personalized training program",
+            exercises: [] // This would be fetched from programs/exercises API
+          },
+          currentMealPlan: {
+            title: "Nutrition Plan",
+            todaysMeals: [] // This would be fetched from meals API
+          },
+          recentProgress: [], // This would be fetched from progress API
+          currentGoal: client.goals || "No goals set"
         }
         
-        const data = await response.json()
-        setClientData(data.client)
+        setClientData(transformedData)
       } catch (err) {
         setError("Unable to load your dashboard. Please try again.")
         console.error('Error fetching client data:', err)

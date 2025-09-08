@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, UserPlus, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { generatePin } from "@/lib/utils"
+import { clientsService } from "@/lib/clients-service"
 
 interface NewClientForm {
   name: string
@@ -39,6 +39,7 @@ export default function NewClientPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [pin, setPin] = useState("")
+  // TODO: Add success state to display PIN to user
   const router = useRouter()
 
   const handleInputChange = (field: keyof NewClientForm, value: string) => {
@@ -76,39 +77,42 @@ export default function NewClientPage() {
     setIsLoading(true)
 
     try {
-      // Generate a unique PIN for the client
-      const clientPin = generatePin()
-      setPin(clientPin)
-
-      // Prepare client data
+      // Use the clients service to create a client via backend API
       const clientData = {
-        ...formData,
-        pin: clientPin,
-        age: formData.age ? parseInt(formData.age) : null,
-        weight: formData.weight ? parseFloat(formData.weight) : null,
-        height: formData.height ? parseFloat(formData.height) : null,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        age: formData.age ? parseInt(formData.age) : undefined,
+        weight: formData.weight ? parseFloat(formData.weight) : undefined,
+        height: formData.height ? parseFloat(formData.height) : undefined,
+        goals: formData.goals || undefined,
+        health_data: formData.healthData || undefined,
+        fitness_level: formData.fitnessLevel as 'beginner' | 'intermediate' | 'advanced' || undefined,
       }
 
-      const response = await fetch('/api/clients', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(clientData),
+      const newClient = await clientsService.createClient(clientData)
+
+      // Show success message with PIN
+      setPin(newClient.pin || 'N/A')
+      
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        age: "",
+        weight: "",
+        height: "",
+        goals: "",
+        healthData: "",
+        fitnessLevel: ""
       })
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        // Show success state with PIN
-        // In a real app, you might send this PIN via email or SMS
-        router.push(`/trainer/clients/${data.client.id}?newClient=true&pin=${clientPin}`)
-      } else {
-        setError(data.error || "Failed to create client. Please try again.")
-      }
-    } catch (err) {
-      setError("Something went wrong. Please try again.")
-      console.error('Error creating client:', err)
+      // Optionally redirect to client details
+      // router.push(`/trainer/clients/${newClient.id}?newClient=true`)
+    } catch (err: any) {
+      console.error('Failed to create client:', err)
+      setError(err.message || "Failed to create client. Please try again.")
     } finally {
       setIsLoading(false)
     }

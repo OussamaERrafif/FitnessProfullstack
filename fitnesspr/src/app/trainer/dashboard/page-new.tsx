@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Users, Calendar, DollarSign, TrendingUp, Plus, Activity } from "lucide-react"
+import { Users, Calendar, DollarSign, TrendingUp, Plus } from "lucide-react"
 import Link from "next/link"
 
 // Mock data for demonstration

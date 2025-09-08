@@ -35,7 +35,7 @@ export default function EndToEndDemo() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     
-    updateState({ isLoading: true, error: undefined, success: undefined });
+    updateState({ isLoading: true,  });
     
     try {
       // Create a test user account first (in a real app, this would be done through registration)
@@ -63,7 +63,7 @@ export default function EndToEndDemo() {
   };
 
   const handleTestBackendConnection = async () => {
-    updateState({ isLoading: true, error: undefined, success: undefined });
+    updateState({ isLoading: true,  });
     
     try {
       const response = await fetch('/api/integration/health-check');
@@ -89,7 +89,7 @@ export default function EndToEndDemo() {
   };
 
   const handleLoadClients = async () => {
-    updateState({ isLoading: true, error: undefined, success: undefined });
+    updateState({ isLoading: true,  });
     
     try {
       // This will likely fail with 401 since we're not authenticated
@@ -110,7 +110,7 @@ export default function EndToEndDemo() {
   };
 
   const handleCreateTestClient = async () => {
-    updateState({ isLoading: true, error: undefined, success: undefined });
+    updateState({ isLoading: true,  });
     
     try {
       const testClient = {
