@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 
 from app.core.config import settings
 from app.core.database import Base
+
 # Import all models to register them
 from app.models.client import Client  # noqa: F401
 from app.models.exercise import Exercise  # noqa: F401
