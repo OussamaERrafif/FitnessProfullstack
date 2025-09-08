@@ -22,8 +22,13 @@ class Client(Base):
     __tablename__ = "clients"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=True)
     trainer_id = Column(Integer, ForeignKey("trainers.id"))
+
+    # Basic information (for PIN-only clients without user accounts)
+    name = Column(String(100))
+    email = Column(String(100))
+    pin = Column(String(10), unique=True)  # PIN for client access
 
     # Personal information
     age = Column(Integer)

@@ -31,7 +31,7 @@ Dependencies:
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api.v1.endpoints.auth import get_current_user
@@ -126,7 +126,7 @@ def read_clients(
 def create_client(
     *,
     db: Session = Depends(get_db),
-    client_in: ClientCreate,
+    client_in: ClientCreate = Body(...),
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """
@@ -153,10 +153,12 @@ def create_client(
     Example Request:
         ```json
         {
+            "name": "John Doe",
+            "email": "john.doe@example.com",
             "goals": "Weight loss and muscle building",
             "fitness_level": "beginner",
             "medical_conditions": "None",
-            "notes": "Prefers morning workouts"
+            "preferences": "Prefers morning workouts"
         }
         ```
 
@@ -195,7 +197,7 @@ def create_client(
 
     client_service = ClientService(db)
     client = client_service.create(
-        client_in, trainer_id=trainer_id, user_id=current_user.id
+        client_in, trainer_id=trainer_id
     )
     return client
 

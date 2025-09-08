@@ -12,6 +12,8 @@ from app.api.v1.endpoints import (
     payments,
     programs,
     progress,
+    sessions,
+    statistics,
     trainers,
 )
 
@@ -25,3 +27,5 @@ api_router.include_router(programs.router, prefix="/programs", tags=["programs"]
 api_router.include_router(meals.router, prefix="/meals", tags=["meals"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 api_router.include_router(progress.router, prefix="/progress", tags=["progress"])
+api_router.include_router(sessions.router, prefix="/sessions", tags=["sessions"])
+api_router.include_router(statistics.router, prefix="/statistics", tags=["statistics"])

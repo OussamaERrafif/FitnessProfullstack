@@ -144,21 +144,21 @@ class ClientService:
             .all()
         )
 
-    def create(self, obj_in: ClientCreate, trainer_id: int, user_id: int) -> Client:
+    def create(self, obj_in: ClientCreate, trainer_id: int, user_id: Optional[int] = None) -> Client:
         """
         Create a new client record in the database.
 
-        This method creates a new client profile associated with a user account
-        and trainer. All client data is validated through the ClientCreate schema
-        before being persisted to the database.
+        This method creates a new client profile with optional user account association.
+        For PIN-only clients, no user account is required. A unique PIN is generated
+        for client access.
 
         Args:
             obj_in (ClientCreate): Validated client data schema
             trainer_id (int): The unique identifier of the assigned trainer
-            user_id (int): The unique identifier of the associated user
+            user_id (Optional[int]): The unique identifier of the associated user (optional)
 
         Returns:
-            Client: The newly created client object with generated ID
+            Client: The newly created client object with generated ID and PIN
 
         Raises:
             IntegrityError: If user_id or trainer_id doesn't exist or violates constraints
@@ -167,16 +167,34 @@ class ClientService:
         Example:
             >>> from app.schemas.client import ClientCreate
             >>> client_data = ClientCreate(
+            ...     name="John Doe",
+            ...     email="john@example.com",
             ...     goals="Weight loss and muscle building",
             ...     fitness_level="beginner",
             ...     medical_conditions="None"
             ... )
-            >>> client = service.create(client_data, trainer_id=1, user_id=123)
-            >>> print(f"Created client with ID: {client.id}")
+            >>> client = service.create(client_data, trainer_id=1)
+            >>> print(f"Created client with ID: {client.id} and PIN: {client.pin}")
         """
+        import random
+        
         obj_in_data = obj_in.dict()
         obj_in_data["trainer_id"] = trainer_id
-        obj_in_data["user_id"] = user_id
+        if user_id:
+            obj_in_data["user_id"] = user_id
+        
+        # Generate a unique 6-digit PIN
+        pin = None
+        for _ in range(10):  # Try up to 10 times to generate a unique PIN
+            pin = f"{random.randint(100000, 999999)}"
+            existing_client = self.db.query(Client).filter(Client.pin == pin).first()
+            if not existing_client:
+                break
+        
+        if not pin:
+            raise ValueError("Failed to generate unique PIN")
+        
+        obj_in_data["pin"] = pin
 
         db_obj = Client(**obj_in_data)
         self.db.add(db_obj)

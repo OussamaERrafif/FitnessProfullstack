@@ -3,10 +3,10 @@ Core application configuration settings.
 """
 
 import secrets
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, Annotated
 
-from pydantic import EmailStr, field_validator
-from pydantic_settings import BaseSettings
+from pydantic import EmailStr, field_validator, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -20,15 +20,15 @@ class Settings(BaseSettings):
 
     # CORS origins
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
-    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1", "testserver"]
+    ALLOWED_HOSTS_STR: str = Field(default="localhost,127.0.0.1,testserver", alias="ALLOWED_HOSTS")
 
-    @field_validator("ALLOWED_HOSTS", mode="before")
-    @classmethod
-    def assemble_allowed_hosts(cls, v: Union[str, List[str]]) -> List[str]:
-        if isinstance(v, str) and v:
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, list):
-            return v
+    @property
+    def ALLOWED_HOSTS(self) -> List[str]:
+        """Get allowed hosts as a list."""
+        if isinstance(self.ALLOWED_HOSTS_STR, str):
+            if not self.ALLOWED_HOSTS_STR.strip():
+                return ["localhost", "127.0.0.1", "testserver"]
+            return [i.strip() for i in self.ALLOWED_HOSTS_STR.split(",")]
         return ["localhost", "127.0.0.1", "testserver"]
 
     def get_cors_origins(self) -> List[str]:
@@ -81,15 +81,19 @@ class Settings(BaseSettings):
     # File upload settings
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     UPLOAD_DIRECTORY: str = "uploads"
-    ALLOWED_FILE_EXTENSIONS: List[str] = [
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".gif",
-        ".pdf",
-        ".mp4",
-        ".avi",
-    ]
+    ALLOWED_FILE_EXTENSIONS_STR: str = Field(
+        default=".jpg,.jpeg,.png,.gif,.pdf,.mp4,.avi", 
+        alias="ALLOWED_FILE_EXTENSIONS"
+    )
+
+    @property
+    def ALLOWED_FILE_EXTENSIONS(self) -> List[str]:
+        """Get allowed file extensions as a list."""
+        if isinstance(self.ALLOWED_FILE_EXTENSIONS_STR, str):
+            if not self.ALLOWED_FILE_EXTENSIONS_STR.strip():
+                return [".jpg", ".jpeg", ".png", ".gif", ".pdf", ".mp4", ".avi"]
+            return [i.strip() for i in self.ALLOWED_FILE_EXTENSIONS_STR.split(",")]
+        return [".jpg", ".jpeg", ".png", ".gif", ".pdf", ".mp4", ".avi"]
 
     # Security settings
     ALGORITHM: str = "HS256"
@@ -98,9 +102,12 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        env_parse_none_str=True,
+        env_ignore_empty=True
+    )
 
 
 settings = Settings()

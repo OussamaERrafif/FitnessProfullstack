@@ -53,10 +53,10 @@ Security:
     - Goal management maintains trainer oversight
 """
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import and_, desc
+from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.models.progress import ExerciseLog, Goal, Progress, WorkoutLog
@@ -445,7 +445,7 @@ class WorkoutLogService:
             query = query.filter(WorkoutLog.trainer_id == trainer_id)
         return query.order_by(desc(WorkoutLog.date)).offset(skip).limit(limit).all()
 
-    def create(self, obj_in: WorkoutLogCreate, trainer_id: int) -> WorkoutLog:
+    def create(self, obj_in: WorkoutLogCreate, trainer_id: Optional[int] = None) -> WorkoutLog:
         """
         Create a comprehensive workout log with exercise details.
 
@@ -454,7 +454,7 @@ class WorkoutLogService:
 
         Args:
             obj_in (WorkoutLogCreate): Workout creation schema with exercise logs
-            trainer_id (int): ID of the trainer logging the workout
+            trainer_id (Optional[int]): ID of the trainer logging the workout
 
         Returns:
             WorkoutLog: Created workout log with associated exercise logs
@@ -474,14 +474,15 @@ class WorkoutLogService:
             >>> workout = workout_service.create(workout_data, trainer_id=1)
         """
         obj_in_data = obj_in.dict(exclude={"exercises"})
-        obj_in_data["trainer_id"] = trainer_id
+        if trainer_id:
+            obj_in_data["trainer_id"] = trainer_id
 
         db_obj = WorkoutLog(**obj_in_data)
         self.db.add(db_obj)
         self.db.flush()  # Get the ID without committing
 
         # Add exercise logs
-        if obj_in.exercises:
+        if hasattr(obj_in, 'exercises') and obj_in.exercises:
             for exercise_data in obj_in.exercises:
                 exercise_log = ExerciseLog(
                     workout_log_id=db_obj.id, **exercise_data.dict()
@@ -613,6 +614,68 @@ class WorkoutLogService:
             ),
             "workouts_per_week": (total_workouts / days) * 7 if days > 0 else 0,
         }
+
+    def get_multi_with_filters(
+        self,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        trainer_id: Optional[int] = None,
+        client_id: Optional[int] = None,
+        date_filter: Optional[date] = None,
+    ) -> List[WorkoutLog]:
+        """
+        Retrieve multiple workout logs with advanced filtering.
+
+        Args:
+            skip (int, optional): Number of records to skip. Defaults to 0.
+            limit (int, optional): Maximum records to return. Defaults to 100.
+            trainer_id (Optional[int], optional): Filter by trainer ID
+            client_id (Optional[int], optional): Filter by client ID
+            date_filter (Optional[date], optional): Filter by specific date
+
+        Returns:
+            List[WorkoutLog]: List of filtered workout logs ordered by date
+        """
+        query = self.db.query(WorkoutLog)
+        
+        if trainer_id:
+            query = query.filter(WorkoutLog.trainer_id == trainer_id)
+        if client_id:
+            query = query.filter(WorkoutLog.client_id == client_id)
+        if date_filter:
+            query = query.filter(func.date(WorkoutLog.date) == date_filter)
+            
+        return query.order_by(desc(WorkoutLog.date)).offset(skip).limit(limit).all()
+
+    def count_with_filters(
+        self,
+        *,
+        trainer_id: Optional[int] = None,
+        client_id: Optional[int] = None,
+        date_filter: Optional[date] = None,
+    ) -> int:
+        """
+        Count workout logs with advanced filtering.
+
+        Args:
+            trainer_id (Optional[int], optional): Filter by trainer ID
+            client_id (Optional[int], optional): Filter by client ID
+            date_filter (Optional[date], optional): Filter by specific date
+
+        Returns:
+            int: Count of filtered workout logs
+        """
+        query = self.db.query(WorkoutLog)
+        
+        if trainer_id:
+            query = query.filter(WorkoutLog.trainer_id == trainer_id)
+        if client_id:
+            query = query.filter(WorkoutLog.client_id == client_id)
+        if date_filter:
+            query = query.filter(func.date(WorkoutLog.date) == date_filter)
+            
+        return query.count()
 
 
 class GoalService:

@@ -41,7 +41,8 @@ export const authService = {
       formData.append('username', credentials.email);
       formData.append('password', credentials.password);
 
-      const response = await apiRequest<AuthResponse>(
+      // First, get the token
+      const tokenResponse = await apiRequest<{ access_token: string; token_type: string }>(
         API_ENDPOINTS.auth.login(),
         {
           method: 'POST',
@@ -53,11 +54,34 @@ export const authService = {
       );
       
       // Store token in localStorage for subsequent requests
-      if (response.access_token) {
-        localStorage.setItem('auth_token', response.access_token);
+      if (tokenResponse.access_token) {
+        localStorage.setItem('auth_token', tokenResponse.access_token);
       }
-      
-      return response;
+
+      // Then, get user data using the token
+      const userResponse = await apiRequest<any>(
+        API_ENDPOINTS.auth.me(),
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${tokenResponse.access_token}`,
+          },
+        }
+      );
+
+      // Map backend user data to frontend format
+      const user: AuthUser = {
+        id: userResponse.id.toString(),
+        email: userResponse.email,
+        name: userResponse.full_name || userResponse.email,
+        role: userResponse.is_superuser ? 'ADMIN' : (userResponse.is_trainer ? 'TRAINER' : 'CLIENT'),
+      };
+
+      return {
+        access_token: tokenResponse.access_token,
+        token_type: tokenResponse.token_type,
+        user: user,
+      };
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -69,20 +93,30 @@ export const authService = {
    */
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
-      const response = await apiRequest<AuthResponse>(
+      // Map frontend fields to backend fields
+      const backendData = {
+        email: userData.email,
+        password: userData.password,
+        full_name: userData.name, // Map 'name' to 'full_name'
+        is_trainer: userData.role === 'TRAINER' // Map 'role' to 'is_trainer'
+      };
+
+      // First, register the user
+      await apiRequest<any>(
         API_ENDPOINTS.auth.register(),
         {
           method: 'POST',
-          body: JSON.stringify(userData),
+          body: JSON.stringify(backendData),
         }
       );
       
-      // Store token in localStorage for subsequent requests
-      if (response.access_token) {
-        localStorage.setItem('auth_token', response.access_token);
-      }
+      // Then, automatically log them in to get a token
+      const loginResponse = await this.login({
+        email: userData.email,
+        password: userData.password
+      });
       
-      return response;
+      return loginResponse;
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;
@@ -94,12 +128,16 @@ export const authService = {
    */
   async getCurrentUser(): Promise<AuthUser> {
     try {
+      if (typeof window === 'undefined') {
+        throw new ApiError('Cannot access localStorage during SSR', 401);
+      }
+
       const token = localStorage.getItem('auth_token');
       if (!token) {
         throw new ApiError('No authentication token found', 401);
       }
 
-      const response = await apiRequest<AuthUser>(
+      const userResponse = await apiRequest<any>(
         API_ENDPOINTS.auth.me(),
         {
           method: 'GET',
@@ -109,11 +147,19 @@ export const authService = {
         }
       );
       
-      return response;
+      // Map backend user data to frontend format
+      const user: AuthUser = {
+        id: userResponse.id.toString(),
+        email: userResponse.email,
+        name: userResponse.full_name || userResponse.email,
+        role: userResponse.is_superuser ? 'ADMIN' : (userResponse.is_trainer ? 'TRAINER' : 'CLIENT'),
+      };
+
+      return user;
     } catch (error) {
       console.error('Failed to get current user:', error);
       // Clear invalid token
-      if (error instanceof ApiError && error.status === 401) {
+      if (error instanceof ApiError && error.status === 401 && typeof window !== 'undefined') {
         localStorage.removeItem('auth_token');
       }
       throw error;
@@ -124,13 +170,18 @@ export const authService = {
    * Logout user
    */
   logout(): void {
-    localStorage.removeItem('auth_token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+    }
   },
 
   /**
    * Get stored auth token
    */
   getToken(): string | null {
+    if (typeof window === 'undefined') {
+      return null; // No localStorage during SSR
+    }
     return localStorage.getItem('auth_token');
   },
 
