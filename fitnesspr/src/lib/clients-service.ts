@@ -179,4 +179,123 @@ export const clientsService = {
       throw error;
     }
   },
+
+  /**
+   * Get comprehensive client dashboard data
+   */
+  async getClientDashboardData(clientId: string): Promise<{
+    client: Client | null;
+    trainer?: {
+      id: string;
+      name: string;
+      email: string;
+      specialization?: string;
+    };
+    currentProgram?: any;
+    currentMealPlan?: any;
+    recentProgress: any[];
+    goals: any[];
+    workoutStats: any;
+    nutritionSummary: any;
+  }> {
+    try {
+      // Import services dynamically to avoid circular dependencies
+      const { programsService } = await import('./programs-service');
+      const { mealsService } = await import('./meals-service');
+      const { progressService } = await import('./progress-service');
+
+      // Fetch all client data in parallel
+      const [
+        client,
+        currentProgram,
+        currentMealPlan,
+        recentProgress,
+        goals,
+        workoutStats,
+        nutritionSummary
+      ] = await Promise.allSettled([
+        this.getClient(clientId),
+        programsService.getCurrentProgram(clientId),
+        mealsService.getCurrentMealPlan(clientId),
+        progressService.getClientProgress(clientId),
+        progressService.getClientGoals(clientId),
+        progressService.getWorkoutStats(clientId),
+        mealsService.getNutritionSummary(clientId)
+      ]);
+
+      // Extract successful results
+      const result: {
+        client: Client | null;
+        trainer?: {
+          id: string;
+          name: string;
+          email: string;
+          specialization?: string;
+        };
+        currentProgram: any;
+        currentMealPlan: any;
+        recentProgress: any[];
+        goals: any[];
+        workoutStats: any;
+        nutritionSummary: any;
+      } = {
+        client: client.status === 'fulfilled' ? client.value : null,
+        currentProgram: currentProgram.status === 'fulfilled' ? currentProgram.value : null,
+        currentMealPlan: currentMealPlan.status === 'fulfilled' ? currentMealPlan.value : null,
+        recentProgress: recentProgress.status === 'fulfilled' ? recentProgress.value.slice(0, 5) : [],
+        goals: goals.status === 'fulfilled' ? goals.value : [],
+        workoutStats: workoutStats.status === 'fulfilled' ? workoutStats.value : null,
+        nutritionSummary: nutritionSummary.status === 'fulfilled' ? nutritionSummary.value : null,
+      };
+
+      // Get trainer info if available
+      if (result.client?.trainer_id) {
+        try {
+          const trainer = await apiRequest<any>(
+            API_ENDPOINTS.trainers.get(result.client.trainer_id.toString()),
+            {
+              method: 'GET',
+              headers: authService.getAuthHeaders(),
+            }
+          );
+          result.trainer = trainer;
+        } catch (error) {
+          console.warn('Failed to fetch trainer info:', error);
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch dashboard data for client ${clientId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get client's name and email by PIN (lightweight version for PIN verification)
+   */
+  async getClientByPin(pin: string): Promise<Client> {
+    return this.verifyClientPin(pin);
+  },
+
+  /**
+   * Update client goals
+   */
+  async updateClientGoals(clientId: string, goals: string): Promise<Client> {
+    try {
+      const response = await apiRequest<Client>(
+        API_ENDPOINTS.clients.update(clientId),
+        {
+          method: 'PUT',
+          headers: authService.getAuthHeaders(),
+          body: JSON.stringify({ goals }),
+        }
+      );
+      
+      return response;
+    } catch (error) {
+      console.error(`Failed to update goals for client ${clientId}:`, error);
+      throw error;
+    }
+  },
 };

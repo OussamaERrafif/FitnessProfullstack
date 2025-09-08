@@ -3,9 +3,9 @@ Core application configuration settings.
 """
 
 import secrets
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
-from pydantic import AnyHttpUrl, EmailStr, HttpUrl, field_validator
+from pydantic import EmailStr, field_validator
 from pydantic_settings import BaseSettings
 
 

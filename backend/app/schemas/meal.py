@@ -7,8 +7,6 @@ from typing import List, Optional
 
 from pydantic import BaseModel, field_validator
 
-from app.models.meal import MealType
-
 
 class MealBase(BaseModel):
     name: str

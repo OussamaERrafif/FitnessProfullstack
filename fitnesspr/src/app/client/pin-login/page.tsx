@@ -41,7 +41,7 @@ export default function ClientPinLogin() {
       } else {
         setError(data.error || "Invalid PIN. Please check with your trainer.")
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)

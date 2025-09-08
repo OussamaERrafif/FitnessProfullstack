@@ -5,17 +5,33 @@
 import { apiRequest, API_ENDPOINTS } from './api-client';
 import { authService } from './auth-service';
 
+
+export interface Exercise {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  muscle_groups: string[];
+  equipment?: string;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  instructions?: string;
+  video_url?: string;
+  image_url?: string;
+}
+
 export interface ProgramExercise {
   id: string;
   exercise_id: string;
-  exercise_name?: string;
-  sets: number;
-  reps: number;
+  exercise: Exercise;
+  sets?: number;
+  reps?: string;
   weight?: number;
-  duration_minutes?: number;
   rest_seconds?: number;
   notes?: string;
-  order_index: number;
+  order_in_program?: number;
+  week_number?: number;
+  day_number?: number;
+  completed?: boolean;
 }
 
 export interface Program {
@@ -33,6 +49,16 @@ export interface Program {
   created_at: string;
   updated_at: string;
   exercises?: ProgramExercise[];
+  client_id: string;
+  trainer_id: string;
+  duration_weeks?: number;
+  sessions_per_week?: number;
+  difficulty_level?: string;
+  goals?: string;
+  is_active: boolean;
+  exercises: ProgramExercise[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateProgramRequest {
@@ -44,6 +70,22 @@ export interface CreateProgramRequest {
   category: string;
   goals?: string;
   client_id?: string;
+  client_id: string;
+  duration_weeks?: number;
+  sessions_per_week?: number;
+  difficulty_level?: string;
+  goals?: string;
+  exercises?: {
+    exercise_id: string;
+    sets?: number;
+    reps?: string;
+    weight?: number;
+    rest_seconds?: number;
+    notes?: string;
+    order_in_program?: number;
+    week_number?: number;
+    day_number?: number;
+  }[];
 }
 
 export interface UpdateProgramRequest extends Partial<CreateProgramRequest> {
@@ -67,6 +109,7 @@ export interface ProgramListResponse {
   total: number;
   page: number;
   size: number;
+
 }
 
 export const programsService = {
@@ -82,6 +125,12 @@ export const programsService = {
       
       const response = await apiRequest<ProgramListResponse>(
         url,
+   * Get all programs for a client
+   */
+  async getClientPrograms(clientId: string): Promise<Program[]> {
+    try {
+      const response = await apiRequest<Program[]>(
+        `/programs/client/${clientId}`,
         {
           method: 'GET',
           headers: authService.getAuthHeaders(),
@@ -90,13 +139,15 @@ export const programsService = {
       
       return response;
     } catch (error) {
-      console.error('Failed to fetch programs:', error);
+
+      console.error(`Failed to fetch programs for client ${clientId}:`, error);
       throw error;
     }
   },
 
   /**
    * Get a specific program by ID with exercises
+
    */
   async getProgram(id: string): Promise<Program> {
     try {
@@ -111,6 +162,20 @@ export const programsService = {
       return response;
     } catch (error) {
       console.error(`Failed to fetch program ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get current active program for a client
+   */
+  async getCurrentProgram(clientId: string): Promise<Program | null> {
+    try {
+      const programs = await this.getClientPrograms(clientId);
+      const activeProgram = programs.find(program => program.is_active);
+      return activeProgram || null;
+    } catch (error) {
+      console.error(`Failed to fetch current program for client ${clientId}:`, error);
       throw error;
     }
   },
@@ -211,6 +276,7 @@ export const programsService = {
       );
     } catch (error) {
       console.error(`Failed to remove exercise ${exerciseId} from program ${programId}:`, error);
+
       throw error;
     }
   },
@@ -222,6 +288,7 @@ export const programsService = {
     try {
       const response = await apiRequest<ProgramListResponse>(
         `${API_ENDPOINTS.programs.list()}/client/${clientId}`,
+
         {
           method: 'GET',
           headers: authService.getAuthHeaders(),
@@ -231,6 +298,7 @@ export const programsService = {
       return response;
     } catch (error) {
       console.error(`Failed to fetch programs for client ${clientId}:`, error);
+
       throw error;
     }
   },
@@ -267,12 +335,14 @@ export const programsService = {
           method: 'PUT',
           headers: authService.getAuthHeaders(),
           body: JSON.stringify({ is_active: isActive }),
+
         }
       );
       
       return response;
     } catch (error) {
       console.error(`Failed to toggle program ${programId} status:`, error);
+
       throw error;
     }
   },

@@ -2,8 +2,8 @@
  * Backend API client configuration and utilities
  */
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-const API_BASE_URL = `${BACKEND_URL}/api/v1`;
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api';
+const API_BASE_URL = `${BACKEND_URL}`;
 
 export interface ApiResponse<T> {
   success: boolean;

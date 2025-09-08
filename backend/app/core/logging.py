@@ -20,10 +20,13 @@ LOGGING_CONFIG = {
             "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         },
         "detailed": {
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s",
+            "format": "%(asctime)s - %(name)s - %(levelname)s - "
+            "%(module)s - %(funcName)s - %(message)s",
         },
         "json": {
-            "format": '{"timestamp": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s", "module": "%(module)s", "function": "%(funcName)s", "message": "%(message)s"}',
+            "format": '{"timestamp": "%(asctime)s", "name": "%(name)s", '
+            '"level": "%(levelname)s", "module": "%(module)s", '
+            '"function": "%(funcName)s", "message": "%(message)s"}',
         },
     },
     "handlers": {
@@ -75,11 +78,11 @@ LOGGING_CONFIG = {
 def setup_logging():
     """Setup logging configuration."""
     logging.config.dictConfig(LOGGING_CONFIG)
-    
+
     # Create custom logger for the app
     logger = logging.getLogger("app")
     logger.info("Logging configured successfully")
-    
+
     return logger
 
 
