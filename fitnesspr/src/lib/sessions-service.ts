@@ -2,7 +2,7 @@
  * Sessions service for backend integration
  */
 
-import { apiRequest, API_ENDPOINTS } from './api-client';
+import { apiRequest } from './api-client';
 import { authService } from './auth-service';
 
 export interface Session {
