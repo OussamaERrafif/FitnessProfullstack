@@ -31,7 +31,7 @@ class ProgramService:
             query = query.filter(Program.trainer_id == trainer_id)
         if client_id:
             query = query.filter(Program.client_id == client_id)
-        return query.filter(Program.is_active == True).offset(skip).limit(limit).all()
+        return query.filter(Program.is_active is True).offset(skip).limit(limit).all()
 
     def create(self, obj_in: ProgramCreate, trainer_id: int) -> Program:
         obj_in_data = obj_in.dict(exclude={"exercises"})
@@ -123,14 +123,14 @@ class ProgramService:
         """Get all active programs for a specific client."""
         return (
             self.db.query(Program)
-            .filter(and_(Program.client_id == client_id, Program.is_active == True))
+            .filter(and_(Program.client_id == client_id, Program.is_active is True))
             .all()
         )
 
     def count(
         self, trainer_id: Optional[int] = None, client_id: Optional[int] = None
     ) -> int:
-        query = self.db.query(Program).filter(Program.is_active == True)
+        query = self.db.query(Program).filter(Program.is_active is True)
         if trainer_id:
             query = query.filter(Program.trainer_id == trainer_id)
         if client_id:
