@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, UserPlus, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { clientsService, CreateClientRequest } from "@/lib/clients-service"
+import { useCreateClientMutation, CreateClientRequest } from "@/lib/store/clientsApi"
 
 interface NewClientForm {
   name: string
@@ -35,10 +35,11 @@ export default function NewClientPage() {
     healthData: "",
     fitnessLevel: ""
   })
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [pin, setPin] = useState("")
-  // TODO: Add success state to display PIN to user
+  
+  // RTK Query mutation hook
+  const [createClient, { isLoading }] = useCreateClientMutation()
 
   const handleInputChange = (field: keyof NewClientForm, value: string) => {
     setFormData(prev => ({
@@ -72,10 +73,8 @@ export default function NewClientPage() {
       return
     }
 
-    setIsLoading(true)
-
     try {
-      // Use the clients service to create a client via backend API
+      // Use RTK Query mutation to create a client via backend API
       const clientData: CreateClientRequest = {
         name: formData.name,
         email: formData.email,
@@ -90,10 +89,10 @@ export default function NewClientPage() {
       if (formData.healthData?.trim()) clientData.health_data = formData.healthData
       if (formData.fitnessLevel) clientData.fitness_level = formData.fitnessLevel as 'beginner' | 'intermediate' | 'advanced'
 
-      const newClient = await clientsService.createClient(clientData)
+      const result = await createClient(clientData).unwrap()
 
       // Show success message with PIN
-      setPin(newClient.pin || 'N/A')
+      setPin(result.pin || 'N/A')
       
       // Reset form
       setFormData({
@@ -109,12 +108,10 @@ export default function NewClientPage() {
       })
 
       // Optionally redirect to client details
-      // router.push(`/trainer/clients/${newClient.id}?newClient=true`)
+      // router.push(`/trainer/clients/${result.id}?newClient=true`)
     } catch (err: any) {
       console.error('Failed to create client:', err)
-      setError(err.message || "Failed to create client. Please try again.")
-    } finally {
-      setIsLoading(false)
+      setError(err.data?.message || err.message || "Failed to create client. Please try again.")
     }
   }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { ReduxProvider } from "@/lib/store/ReduxProvider";
 
 export const metadata: Metadata = {
   title: "FitnessPro - Professional Fitness Training Platform",
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        {children}
+        <ReduxProvider>
+          {children}
+        </ReduxProvider>
         <Toaster />
       </body>
     </html>
