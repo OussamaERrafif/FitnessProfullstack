@@ -2,7 +2,7 @@
 Progress tracking endpoints.
 """
 
-from typing import Any, List
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -14,7 +14,6 @@ from app.schemas.progress import (
     GoalCreate,
     GoalListResponse,
     GoalResponse,
-    GoalUpdate,
     ProgressCreate,
     ProgressListResponse,
     ProgressResponse,
@@ -22,7 +21,6 @@ from app.schemas.progress import (
     WorkoutLogCreate,
     WorkoutLogListResponse,
     WorkoutLogResponse,
-    WorkoutLogUpdate,
 )
 from app.services.progress_service import (
     GoalService,
@@ -260,9 +258,9 @@ def get_workout_stats(
     """
     # Check access permissions
     if current_user.is_trainer:
-        trainer_id = current_user.trainer.id if current_user.trainer else None
         # Trainer should only access their own clients' stats
         # This would need additional validation in a real implementation
+        pass
     else:
         # Client can only access their own stats
         client = current_user.client if hasattr(current_user, "client") else None

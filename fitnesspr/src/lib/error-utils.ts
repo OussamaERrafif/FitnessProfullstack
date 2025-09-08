@@ -58,6 +58,15 @@ export function determineErrorSeverity(error: Error, _context?: ErrorContext): E
     return 'high'
   }
   
+  // Context-specific severity adjustments
+  if (context === 'auth' && (message.includes('login') || message.includes('token'))) {
+    return 'high'
+  }
+  
+  if (context === 'payment' && message.includes('payment')) {
+    return 'high'
+  }
+  
   // Medium severity errors that affect some features
   if (message.includes('network') || message.includes('api')) {
     return 'medium'
@@ -92,7 +101,7 @@ export function generateErrorMetadata(
   error: Error,
   context: ErrorContext = 'global'
 ): ErrorMetadata {
-  return {
+  const metadata: ErrorMetadata = {
     context,
     severity: determineErrorSeverity(error, context),
     category: categorizeError(error, context),
@@ -101,6 +110,13 @@ export function generateErrorMetadata(
     retryable: isRetryableError(error),
     supportContact: getSupportContact(context)
   }
+  
+  const userAgent = typeof window !== 'undefined' ? window.navigator?.userAgent : undefined
+  if (userAgent) {
+    metadata.userAgent = userAgent
+  }
+  
+  return metadata
 }
 
 /**
@@ -129,13 +145,20 @@ export function createErrorReport(
 ): ErrorReport {
   const metadata = generateErrorMetadata(error, context)
   
-  return {
+  const report: ErrorReport = {
     error,
     metadata,
     stackTrace: error.stack || '',
+
     breadcrumbs: getBreadcrumbs(),
     ...additionalData
   }
+  
+  if (error.stack) {
+    report.stackTrace = error.stack
+  }
+  
+  return report
 }
 
 /**

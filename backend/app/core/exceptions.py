@@ -3,10 +3,9 @@ Global exception handlers for the FastAPI application.
 """
 
 import traceback
-from typing import Any, Dict
 
 from fastapi import HTTPException, Request, status
-from fastapi.exceptions import RequestValidationError, ValidationException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -24,9 +23,9 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
             "url": str(request.url),
             "method": request.method,
             "request_id": getattr(request.state, "request_id", None),
-        }
+        },
     )
-    
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -34,7 +33,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
             "message": exc.detail,
             "status_code": exc.status_code,
             "request_id": getattr(request.state, "request_id", None),
-        }
+        },
     )
 
 
@@ -44,12 +43,14 @@ async def validation_exception_handler(
     """Handle validation errors."""
     errors = []
     for error in exc.errors():
-        errors.append({
-            "field": " -> ".join(str(x) for x in error["loc"]),
-            "message": error["msg"],
-            "type": error["type"],
-        })
-    
+        errors.append(
+            {
+                "field": " -> ".join(str(x) for x in error["loc"]),
+                "message": error["msg"],
+                "type": error["type"],
+            }
+        )
+
     logger.warning(
         f"Validation Error: {errors}",
         extra={
@@ -57,9 +58,9 @@ async def validation_exception_handler(
             "url": str(request.url),
             "method": request.method,
             "request_id": getattr(request.state, "request_id", None),
-        }
+        },
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -68,7 +69,7 @@ async def validation_exception_handler(
             "details": errors,
             "status_code": 422,
             "request_id": getattr(request.state, "request_id", None),
-        }
+        },
     )
 
 
@@ -84,9 +85,9 @@ async def rate_limit_exception_handler(
             "method": request.method,
             "client_ip": request.client.host if request.client else None,
             "request_id": getattr(request.state, "request_id", None),
-        }
+        },
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         content={
@@ -95,7 +96,7 @@ async def rate_limit_exception_handler(
             "detail": exc.detail,
             "status_code": 429,
             "request_id": getattr(request.state, "request_id", None),
-        }
+        },
     )
 
 
@@ -112,9 +113,9 @@ async def sqlalchemy_exception_handler(
                 "url": str(request.url),
                 "method": request.method,
                 "request_id": getattr(request.state, "request_id", None),
-            }
+            },
         )
-        
+
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={
@@ -122,9 +123,9 @@ async def sqlalchemy_exception_handler(
                 "message": "Database constraint violation",
                 "status_code": 409,
                 "request_id": getattr(request.state, "request_id", None),
-            }
+            },
         )
-    
+
     # Other SQLAlchemy errors
     logger.error(
         f"Database error: {str(exc)}",
@@ -134,9 +135,9 @@ async def sqlalchemy_exception_handler(
             "method": request.method,
             "request_id": getattr(request.state, "request_id", None),
         },
-        exc_info=True
+        exc_info=True,
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -144,7 +145,7 @@ async def sqlalchemy_exception_handler(
             "message": "Database error occurred",
             "status_code": 500,
             "request_id": getattr(request.state, "request_id", None),
-        }
+        },
     )
 
 
@@ -159,9 +160,9 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
             "method": request.method,
             "request_id": getattr(request.state, "request_id", None),
         },
-        exc_info=True
+        exc_info=True,
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -169,7 +170,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
             "message": "Internal server error",
             "status_code": 500,
             "request_id": getattr(request.state, "request_id", None),
-        }
+        },
     )
 
 

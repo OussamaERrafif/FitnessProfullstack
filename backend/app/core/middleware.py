@@ -19,7 +19,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         # Generate request ID
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
-        
+
         # Log request
         start_time = time.time()
         logger.info(
@@ -30,15 +30,15 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 "url": str(request.url),
                 "client_ip": request.client.host if request.client else None,
                 "user_agent": request.headers.get("user-agent"),
-            }
+            },
         )
-        
+
         try:
             response = await call_next(request)
-            
+
             # Calculate process time
             process_time = time.time() - start_time
-            
+
             # Log response
             logger.info(
                 f"Request completed: {response.status_code}",
@@ -46,15 +46,15 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "request_id": request_id,
                     "status_code": response.status_code,
                     "process_time": round(process_time, 4),
-                }
+                },
             )
-            
+
             # Add headers
             response.headers["X-Request-ID"] = request_id
             response.headers["X-Process-Time"] = str(round(process_time, 4))
-            
+
             return response
-            
+
         except Exception as e:
             process_time = time.time() - start_time
             logger.error(
@@ -64,7 +64,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "error": str(e),
                     "process_time": round(process_time, 4),
                 },
-                exc_info=True
+                exc_info=True,
             )
             raise
 
@@ -72,16 +72,20 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware for adding security headers."""
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         response = await call_next(request)
-        
+
         # Security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        
+        response.headers["Permissions-Policy"] = (
+            "geolocation=(), microphone=(), camera=()"
+        )
+
         # Content Security Policy
         csp = (
             "default-src 'self'; "
@@ -93,22 +97,24 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "frame-ancestors 'none';"
         )
         response.headers["Content-Security-Policy"] = csp
-        
+
         return response
 
 
 class HealthCheckMiddleware(BaseHTTPMiddleware):
     """Middleware for health monitoring."""
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         # Skip health checks for actual health endpoints
         if request.url.path in ["/health", "/", "/docs", "/openapi.json"]:
             return await call_next(request)
-        
+
         response = await call_next(request)
-        
+
         # Add health indicators
         response.headers["X-API-Health"] = "healthy"
         response.headers["X-API-Version"] = "1.0.0"
-        
+
         return response
