@@ -45,7 +45,7 @@ export function categorizeError(error: Error, context?: ErrorContext): ErrorCate
 /**
  * Determines error severity based on error type and context
  */
-export function determineErrorSeverity(error: Error, context?: ErrorContext): ErrorSeverity {
+export function determineErrorSeverity(error: Error, _context?: ErrorContext): ErrorSeverity {
   const message = error.message.toLowerCase()
   
   // Critical errors that break the entire app
