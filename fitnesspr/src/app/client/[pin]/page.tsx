@@ -12,8 +12,6 @@ import {
   Apple, 
   TrendingUp, 
   Calendar,
-  Clock,
-  Target,
   LogOut,
   MessageSquare,
   Plus
@@ -63,14 +61,12 @@ export default function ClientDashboard({ params }: ClientDashboardProps) {
   const [clientData, setClientData] = useState<ClientData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
-  const [pin, setPin] = useState<string>("")
   const router = useRouter()
 
   useEffect(() => {
     const fetchClientData = async () => {
       try {
         const resolvedParams = await params
-        setPin(resolvedParams.pin)
         
         const response = await fetch(`/api/client/${resolvedParams.pin}`)
         
