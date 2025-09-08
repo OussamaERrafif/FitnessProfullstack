@@ -1,88 +1,150 @@
-import { Metadata } from 'next'
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Users, Calendar, TrendingUp, Filter, MoreVertical } from "lucide-react"
+import { Plus, Search, Users, Calendar, TrendingUp, Filter, MoreVertical, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { authService } from "@/lib/auth-service"
 
-export const metadata: Metadata = {
-  title: 'Clients | Trainer Dashboard',
-  description: 'Manage your fitness clients and their progress',
+interface Client {
+  id: string
+  name: string
+  email: string
+  status: "active" | "inactive"
+  lastSession?: string
+  progress: number
+  plan?: string
+  joinDate: string
+  nextSession?: string
 }
 
-// Mock clients data
-const mockClients = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah.j@email.com",
-    pin: "123456",
-    status: "active",
-    lastSession: "2 days ago",
-    progress: 85,
-    plan: "Full Body Strength",
-    joinDate: "2025-01-15",
-    nextSession: "Tomorrow 9:00 AM"
-  },
-  {
-    id: "2", 
-    name: "Mike Chen",
-    email: "mike.chen@email.com",
-    pin: "654321",
-    status: "active",
-    lastSession: "1 week ago",
-    progress: 92,
-    plan: "Weight Loss Program",
-    joinDate: "2024-12-10",
-    nextSession: "Today 2:00 PM"
-  },
-  {
-    id: "3",
-    name: "Emily Davis", 
-    email: "emily.d@email.com",
-    pin: "111222",
-    status: "inactive",
-    lastSession: "3 weeks ago",
-    progress: 67,
-    plan: "Cardio Focus",
-    joinDate: "2025-02-01",
-    nextSession: "Not scheduled"
-  },
-  {
-    id: "4",
-    name: "David Wilson",
-    email: "david.w@email.com", 
-    pin: "333444",
-    status: "active",
-    lastSession: "Yesterday",
-    progress: 78,
-    plan: "Strength Building",
-    joinDate: "2025-01-20",
-    nextSession: "Friday 4:00 PM"
-  },
-  {
-    id: "5",
-    name: "Lisa Brown",
-    email: "lisa.b@email.com",
-    pin: "555666",
-    status: "active", 
-    lastSession: "3 days ago",
-    progress: 88,
-    plan: "Marathon Training",
-    joinDate: "2024-11-05",
-    nextSession: "Monday 7:00 AM"
-  }
-]
-
-const clientStats = {
-  totalClients: mockClients.length,
-  activeClients: mockClients.filter(c => c.status === 'active').length,
-  avgProgress: Math.round(mockClients.reduce((sum, c) => sum + c.progress, 0) / mockClients.length),
-  newThisMonth: 2
+interface ClientStats {
+  totalClients: number
+  activeClients: number
+  avgProgress: number
+  newThisMonth: number
 }
 
 export default function TrainerClients() {
+  const [clients, setClients] = useState<Client[]>([])
+  const [clientStats, setClientStats] = useState<ClientStats>({
+    totalClients: 0,
+    activeClients: 0,
+    avgProgress: 0,
+    newThisMonth: 0
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
+  const router = useRouter()
+
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        setIsLoading(true)
+        setError("")
+
+        // Check if user is authenticated
+        if (!authService.isAuthenticated()) {
+          router.push('/login')
+          return
+        }
+
+        // Verify user is a trainer
+        try {
+          const user = await authService.getCurrentUser()
+          if (user.role !== 'TRAINER') {
+            router.push('/login')
+            return
+          }
+        } catch (err) {
+          router.push('/login')
+          return
+        }
+
+        // TODO: Replace with actual API call when backend is ready
+        // For now, showing placeholder data without PINs
+        const placeholderClients: Client[] = [
+          {
+            id: "1",
+            name: "Sarah Johnson",
+            email: "sarah.j@email.com",
+            status: "active",
+            lastSession: "2 days ago",
+            progress: 85,
+            plan: "Full Body Strength",
+            joinDate: "2025-01-15",
+            nextSession: "Tomorrow 9:00 AM"
+          },
+          {
+            id: "2", 
+            name: "Mike Chen",
+            email: "mike.chen@email.com",
+            status: "active",
+            lastSession: "1 week ago",
+            progress: 92,
+            plan: "Weight Loss Program",
+            joinDate: "2024-12-10",
+            nextSession: "Today 2:00 PM"
+          }
+        ]
+
+        setClients(placeholderClients)
+        setClientStats({
+          totalClients: placeholderClients.length,
+          activeClients: placeholderClients.filter(c => c.status === 'active').length,
+          avgProgress: Math.round(placeholderClients.reduce((sum, c) => sum + c.progress, 0) / placeholderClients.length),
+          newThisMonth: 1
+        })
+
+      } catch (err) {
+        console.error('Failed to load clients:', err)
+        setError('Failed to load clients')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadClients()
+  }, [router])
+
+  const filteredClients = clients.filter(client =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading clients...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl text-red-600">Error</CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push('/trainer/dashboard')} className="w-full">
+              Return to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
   return (
     <div>
       {/* Page Header */}
@@ -174,6 +236,8 @@ export default function TrainerClients() {
                 <Input 
                   placeholder="Search clients by name, email, or plan..." 
                   className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
@@ -201,7 +265,7 @@ export default function TrainerClients() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockClients.map((client) => (
+            {filteredClients.map((client) => (
               <div 
                 key={client.id} 
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
@@ -219,9 +283,9 @@ export default function TrainerClients() {
                     <h4 className="font-semibold text-lg">{client.name}</h4>
                     <p className="text-gray-600 text-sm">{client.email}</p>
                     <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500">
-                      <span>PIN: {client.pin}</span>
                       <span>Joined: {client.joinDate}</span>
                       <span>Plan: {client.plan}</span>
+                      <span>Last: {client.lastSession}</span>
                     </div>
                   </div>
                 </div>
@@ -269,7 +333,7 @@ export default function TrainerClients() {
           {/* Pagination */}
           <div className="flex justify-between items-center mt-6 pt-4 border-t">
             <p className="text-sm text-gray-600">
-              Showing {mockClients.length} of {mockClients.length} clients
+              Showing {filteredClients.length} of {clients.length} clients
             </p>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" disabled>
