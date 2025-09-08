@@ -142,7 +142,7 @@ export default function TrainerDashboard() {
             <div className="text-2xl font-bold">{stats?.todays_sessions || 0}</div>
             <p className="text-xs text-muted-foreground">
               {todaySessions.length > 0 
-                ? `Next session at ${new Date(todaySessions[0].scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+                ? `Next session at ${new Date(todaySessions[0]?.scheduled_at || '').toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
                 : 'No sessions scheduled'
               }
             </p>

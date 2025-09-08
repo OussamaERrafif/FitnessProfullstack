@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, UserPlus, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { clientsService } from "@/lib/clients-service"
+import { clientsService, CreateClientRequest } from "@/lib/clients-service"
 
 interface NewClientForm {
   name: string
@@ -40,7 +39,6 @@ export default function NewClientPage() {
   const [error, setError] = useState("")
   const [pin, setPin] = useState("")
   // TODO: Add success state to display PIN to user
-  const router = useRouter()
 
   const handleInputChange = (field: keyof NewClientForm, value: string) => {
     setFormData(prev => ({
@@ -78,17 +76,19 @@ export default function NewClientPage() {
 
     try {
       // Use the clients service to create a client via backend API
-      const clientData = {
+      const clientData: CreateClientRequest = {
         name: formData.name,
         email: formData.email,
-        phone: formData.phone || undefined,
-        age: formData.age ? parseInt(formData.age) : undefined,
-        weight: formData.weight ? parseFloat(formData.weight) : undefined,
-        height: formData.height ? parseFloat(formData.height) : undefined,
-        goals: formData.goals || undefined,
-        health_data: formData.healthData || undefined,
-        fitness_level: formData.fitnessLevel as 'beginner' | 'intermediate' | 'advanced' || undefined,
       }
+
+      // Add optional fields only if they have values
+      if (formData.phone?.trim()) clientData.phone = formData.phone
+      if (formData.age) clientData.age = parseInt(formData.age)
+      if (formData.weight) clientData.weight = parseFloat(formData.weight)
+      if (formData.height) clientData.height = parseFloat(formData.height)
+      if (formData.goals?.trim()) clientData.goals = formData.goals
+      if (formData.healthData?.trim()) clientData.health_data = formData.healthData
+      if (formData.fitnessLevel) clientData.fitness_level = formData.fitnessLevel as 'beginner' | 'intermediate' | 'advanced'
 
       const newClient = await clientsService.createClient(clientData)
 
@@ -116,6 +116,59 @@ export default function NewClientPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show success state if client was created successfully
+  if (pin) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Link href="/trainer/clients" className="flex items-center text-blue-600 hover:text-blue-800">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Clients
+          </Link>
+        </div>
+
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-green-600">Client Created Successfully!</CardTitle>
+            <CardDescription>
+              Your new client has been added to the system. Share the PIN below with them to access their dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-6">
+            <div className="p-6 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">Client Access PIN</p>
+              <p className="text-3xl font-bold font-mono text-blue-600">{pin}</p>
+            </div>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => {
+                  setPin("")
+                  setFormData({
+                    name: "",
+                    email: "",
+                    phone: "",
+                    age: "",
+                    weight: "",
+                    height: "",
+                    goals: "",
+                    healthData: "",
+                    fitnessLevel: ""
+                  })
+                }}
+                className="w-full"
+              >
+                Add Another Client
+              </Button>
+              <Button variant="outline" asChild className="w-full">
+                <Link href="/trainer/clients">View All Clients</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

@@ -210,7 +210,7 @@ export function ErrorTestComponent({ context = 'global' }: ErrorTestProps) {
           <CardTitle>Error Boundary Test</CardTitle>
         </CardHeader>
         <CardContent>
-          <ErrorBoundary context={context === 'global' ? undefined : context}>
+          <ErrorBoundary {...(context !== 'global' && { context })}>
             <div className="p-4 border rounded-lg">
               <ErrorThrowingComponent />
             </div>

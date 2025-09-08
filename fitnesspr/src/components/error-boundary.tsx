@@ -68,7 +68,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         <FallbackComponent 
           error={this.state.error}
           resetError={this.resetError}
-          context={this.props.context}
+          {...(this.props.context && { context: this.props.context })}
         />
       )
     }

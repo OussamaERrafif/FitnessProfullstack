@@ -132,14 +132,14 @@ export default function TrainerReports() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-lg">${data.revenue.toLocaleString()}</p>
-                    {index > 0 && (
+                    {index > 0 && mockRevenueTrend[index - 1] && (
                       <p className={`text-xs ${
-                        data.revenue > mockRevenueTrend[index - 1].revenue 
+                        data.revenue > mockRevenueTrend[index - 1]!.revenue 
                           ? 'text-green-600' 
                           : 'text-red-600'
                       }`}>
-                        {data.revenue > mockRevenueTrend[index - 1].revenue ? '+' : ''}
-                        {Math.round(((data.revenue - mockRevenueTrend[index - 1].revenue) / mockRevenueTrend[index - 1].revenue) * 100)}%
+                        {data.revenue > mockRevenueTrend[index - 1]!.revenue ? '+' : ''}
+                        {Math.round(((data.revenue - mockRevenueTrend[index - 1]!.revenue) / mockRevenueTrend[index - 1]!.revenue) * 100)}%
                       </p>
                     )}
                   </div>
